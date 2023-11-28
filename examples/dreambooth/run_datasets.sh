@@ -43,7 +43,7 @@ do
   --lr_warmup_steps=0 \
 	 --max_train_steps=3000 \
 	 --seed=3407 \
-	 --lr_scheduler="constant"g \
+	 --lr_scheduler="constant" \
   --pretrained_vae_model_name_or_path=$VAE_PATH \
   --mixed_precision="fp16" \
 	 --validation_prompt="daiton$POSTPROMPT" \
