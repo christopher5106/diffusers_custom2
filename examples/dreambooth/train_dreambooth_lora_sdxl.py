@@ -685,6 +685,7 @@ class DreamBoothDataset(Dataset):
                 for caption in custom_instance_prompts:
                     self.custom_instance_prompts.extend(itertools.repeat(caption, repeats))
         else:
+            logger.info("loading images")
             self.instance_data_root = Path(instance_data_root)
             if not self.instance_data_root.exists():
                 raise ValueError("Instance images root doesn't exists.")
@@ -697,6 +698,7 @@ class DreamBoothDataset(Dataset):
                     self.custom_instance_prompts.extend(
                         itertools.repeat(open(path).readlines()[0], repeats)
                     )
+            logger.info(f"Found {len(instance_images)} images")
 
         self.instance_images = []
         for img in instance_images:
