@@ -1229,6 +1229,7 @@ def main(args):
             safeguard_warmup=args.prodigy_safeguard_warmup,
         )
 
+    logger.info(f"Dataset dir {args.instance_data_dir}")
     # Dataset and DataLoaders creation:
     train_dataset = DreamBoothDataset(
         instance_data_root=args.instance_data_dir,
