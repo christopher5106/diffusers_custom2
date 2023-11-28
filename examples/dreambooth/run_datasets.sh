@@ -22,17 +22,18 @@ export VAE_PATH="madebyollin/sdxl-vae-fp16-fix"
 for DATASET in blonde  bubbleverse 'lineart backdrop' 'newrayman running' sword 'vintage photo' ;
 do
   POSTPROMPT="";
-  if [ "$DATASET" == "blonde" ];
+  if [ "$DATASET" = "blonde" ];
     then POSTPROMPT=" hollygltly";
   fi;
-  if [ "$DATASET" == "newrayman running" ];
+  if [ "$DATASET" = "newrayman running" ];
     then POSTPROMPT=" rayman";
   fi;
 
-	echo $HOME/$dataset;
+	echo "Dataset: $HOME/$DATASET";
   echo $POSTPROMPT;
+
 	python train_dreambooth_lora_sdxl.py \
-	--instance_data_dir=$HOME/$dataset \
+	--instance_data_dir=$HOME/$DATASET \
   --pretrained_model_name_or_path=$MODEL_NAME  \
   --instance_prompt="daiton$POSTPROMPT"  \
   --resolution=1024 \
