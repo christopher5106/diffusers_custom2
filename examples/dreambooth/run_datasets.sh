@@ -29,11 +29,11 @@ do
     then POSTPROMPT=" rayman";
   fi;
 
-	echo "Dataset: $HOME/$DATASET";
+	echo "Dataset: $HOME/datasets/$DATASET";
   echo $POSTPROMPT;
 
 	python train_dreambooth_lora_sdxl.py \
-	--instance_data_dir=$HOME/$DATASET \
+	--instance_data_dir=$HOME/datasets/$DATASET \
   --pretrained_model_name_or_path=$MODEL_NAME  \
   --instance_prompt="daiton$POSTPROMPT"  \
   --resolution=1024 \
