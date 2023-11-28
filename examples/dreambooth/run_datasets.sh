@@ -15,6 +15,10 @@ mkdir -p MODELS
 #  --wandb
 
 
+export MODEL_NAME="stabilityai/stable-diffusion-xl-base-1.0"
+export VAE_PATH="madebyollin/sdxl-vae-fp16-fix"
+
+
 for DATASET in blonde  bubbleverse 'lineart backdrop' 'newrayman running' sword 'vintage photo' ;
 do
   POSTPROMPT="";
@@ -28,12 +32,20 @@ do
 	echo $HOME/$dataset;
   echo $POSTPROMPT;
 	python train_dreambooth_lora_sdxl.py \
-	--pretrained_model_name_or_path="stabilityai/stable-diffusion-xl-base-1.0" \
-	--instance_data_dir="$HOME/datasets/$DATASET/" \
-	--output_dir="MODELS/$DATASET/" \
-	--instance_prompt="daiton$POSTPROMPT" --resolution=1024 \
-	 --max_train_steps=3000 --seed=3407 --lr_scheduler="constant"g \
-	 --validation_prompt=daiton --report_to="wandb"
+  --pretrained_model_name_or_path=$MODEL_NAME  \
+  --instance_prompt="daiton$POSTPROMPT"  \
+  --resolution=1024 \
+  --train_batch_size=1 \
+  --gradient_accumulation_steps=1 \
+  --learning_rate=1e-4 \
+  --lr_warmup_steps=0 \
+	 --max_train_steps=3000 \
+	 --seed=3407 \
+	 --lr_scheduler="constant"g \
+  --pretrained_vae_model_name_or_path=$VAE_PATH \
+  --mixed_precision="fp16" \
+	 --validation_prompt="daiton$POSTPROMPT" \
+	 --report_to="wandb"
 done;
 
 
