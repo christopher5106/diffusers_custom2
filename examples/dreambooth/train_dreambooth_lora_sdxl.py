@@ -743,7 +743,7 @@ class DreamBoothDataset(Dataset):
         if self.custom_instance_prompts:
             caption = self.custom_instance_prompts[index % self.num_instance_images]
             if caption:
-                example["instance_prompt"] = caption
+                example["instance_prompt"] = self.instance_prompt + " " + caption
             else:
                 example["instance_prompt"] = self.instance_prompt
 
