@@ -37,6 +37,7 @@ do
   --pretrained_model_name_or_path=$MODEL_NAME  \
   --instance_prompt="daiton$POSTPROMPT"  \
   --resolution=1024 \
+  --train_text_encoder \
   --train_batch_size=1 \
   --gradient_accumulation_steps=1 \
   --learning_rate=1e-4 \
