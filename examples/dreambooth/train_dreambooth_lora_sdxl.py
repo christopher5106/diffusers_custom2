@@ -697,7 +697,7 @@ class DreamBoothDataset(Dataset):
                     instance_images.append(Image.open(path))
 
                     self.custom_instance_prompts.extend(
-                        itertools.repeat(open(path + ".txt").readlines()[0], repeats)
+                        itertools.repeat(open(str(path) + ".txt").readlines()[0], repeats)
                     )
             logger.info(f"Found {len(instance_images)} images")
 
