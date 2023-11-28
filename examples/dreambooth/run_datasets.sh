@@ -32,6 +32,7 @@ do
 	echo $HOME/$dataset;
   echo $POSTPROMPT;
 	python train_dreambooth_lora_sdxl.py \
+	--instance_data_dir=$HOME/$dataset \
   --pretrained_model_name_or_path=$MODEL_NAME  \
   --instance_prompt="daiton$POSTPROMPT"  \
   --resolution=1024 \
