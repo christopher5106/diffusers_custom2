@@ -33,7 +33,7 @@ do
 	--output_dir="MODELS/$DATASET/" \
 	--instance_prompt="daiton$POSTPROMPT" --resolution=1024 \
 	 --max_train_steps=3000 --seed=3407 --lr_scheduler="constant"g \
-	 --validation_prompt=daiton --wandb
+	 --validation_prompt=daiton --report_to="wandb"
 done;
 
 
