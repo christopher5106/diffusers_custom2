@@ -32,24 +32,25 @@ do
 	echo "Dataset: $HOME/datasets/$DATASET";
   echo $POSTPROMPT;
 
-	python train_dreambooth_lora_sdxl.py \
-	--instance_data_dir="$HOME/datasets/$DATASET" \
+  python train_dreambooth_lora_sdxl.py \
+  --instance_data_dir="$HOME/datasets/$DATASET" \
   --pretrained_model_name_or_path=$MODEL_NAME  \
   --output_dir="MODELS/$DATASET/" \
   --instance_prompt="daiton$POSTPROMPT"  \
   --resolution=1024 \
+  --rank 64 \
   --train_text_encoder \
   --train_batch_size=1 \
   --gradient_accumulation_steps=1 \
   --learning_rate=1e-4 \
   --lr_warmup_steps=0 \
-	 --max_train_steps=3000 \
-	 --seed=3407 \
-	 --lr_scheduler="constant" \
+  --max_train_steps=5000 \
+  --seed=3407 \
+  --lr_scheduler="constant" \
   --pretrained_vae_model_name_or_path=$VAE_PATH \
   --mixed_precision="fp16" \
-	 --validation_prompt="daiton$POSTPROMPT" \
-	 --report_to="wandb"
+  --validation_prompt="daiton$POSTPROMPT" \
+  --report_to="wandb"
 done;
 
 

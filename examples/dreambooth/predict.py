@@ -95,9 +95,8 @@ if __name__ == "__main__":
     results_dir = "results"
     os.makedirs(results_dir, exist_ok=True)
 
-    for dataset in ['blonde', 'bubbleverse', 'sword']:
-    # for dataset in ['blonde', 'bubbleverse', 'lineart backdrop', 'newrayman running',
-    #                 'sword', 'vintage photo']:
+    for dataset in ['blonde', 'bubbleverse', 'lineart backdrop', 'newrayman running',
+                    'sword', 'vintage photo']:
         postprompt = ""
         if dataset == "newrayman running":
             postprompt = " rayman"
