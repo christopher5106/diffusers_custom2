@@ -33,9 +33,9 @@ do
   echo $POSTPROMPT;
 
 	python train_dreambooth_lora_sdxl.py \
-	--instance_data_dir=$HOME/datasets/$DATASET \
+	--instance_data_dir="$HOME/datasets/$DATASET" \
   --pretrained_model_name_or_path=$MODEL_NAME  \
-  --output_dir=MODELS/$DATASET/ \
+  --output_dir="MODELS/$DATASET/" \
   --instance_prompt="daiton$POSTPROMPT"  \
   --resolution=1024 \
   --train_text_encoder \
