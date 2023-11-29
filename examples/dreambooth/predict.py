@@ -99,8 +99,6 @@ if __name__ == "__main__":
     # for dataset in ['blonde', 'bubbleverse', 'lineart backdrop', 'newrayman running',
     #                 'sword', 'vintage photo']:
         postprompt = ""
-        if dataset == "blonde":
-            postprompt = " hollygltly"
         if dataset == "newrayman running":
             postprompt = " rayman"
 
@@ -110,7 +108,7 @@ if __name__ == "__main__":
                 base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
                 lora_path=f"MODELS/{dataset}/{checkpoint}/pytorch_lora_weights.safetensors",
                 outputs_dir=f"{results_dir}/{dataset}/{checkpoint}",
-                prompts=["daiton" + postprompt + " " + p for p in _prompts],
+                prompts=["daiton" + postprompt + " " + p.replace("hollygltly", "a girl") for p in _prompts],
                 num_images=10,
                 num_inference_steps=30,
             )
