@@ -102,7 +102,7 @@ if __name__ == "__main__":
             postprompt = " rayman"
 
         _prompts = prompts[dataset]
-        for checkpoint in ["checkpoint-1500", "checkpoint-3000"]:
+        for checkpoint in ["checkpoint-5000"]:  # ["checkpoint-1500", "checkpoint-3000"]:
             generate_lora_sdxl_images(
                 base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
                 lora_path=f"MODELS/{dataset}/{checkpoint}/pytorch_lora_weights.safetensors",
