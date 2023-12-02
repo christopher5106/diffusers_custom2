@@ -106,8 +106,8 @@ if __name__ == "__main__":
         for checkpoint in ["checkpoint-1500", "checkpoint-3000"]: # checkpoint-5000
             generate_lora_sdxl_images(
                 base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
-                lora_path=f"MODELS/{dataset}/{checkpoint}/pytorch_lora_weights.safetensors",
-                outputs_dir=f"{results_dir}/{dataset}/{checkpoint}",
+                lora_path=f"MODELS_64/{dataset}/{checkpoint}/pytorch_lora_weights.safetensors",
+                outputs_dir=f"{results_dir}_64/{dataset}/{checkpoint}",
                 prompts=["daiton" + postprompt + " " + p for p in _prompts],
                 num_images=10,
                 num_inference_steps=30,
