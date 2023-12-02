@@ -14,12 +14,11 @@ mkdir -p MODELS
 #  --output_dir="MODELS/rayman/" \
 #  --wandb
 
-
 export MODEL_NAME="stabilityai/stable-diffusion-xl-base-1.0"
 export VAE_PATH="madebyollin/sdxl-vae-fp16-fix"
 
 
-for DATASET in blonde  bubbleverse 'lineart backdrop' 'newrayman running' sword 'vintage photo' ;
+for DATASET in blonde  bubbleverse 'lineart backdrop' 'newrayman running' sword 'vintage photo' rayman3;
 do
   POSTPROMPT="";
   if [ "$DATASET" = "blonde" ];
@@ -44,7 +43,7 @@ do
   --gradient_accumulation_steps=1 \
   --learning_rate=1e-4 \
   --lr_warmup_steps=0 \
-  --max_train_steps=5000 \
+  --max_train_steps=3000 \
   --seed=3407 \
   --lr_scheduler="constant" \
   --pretrained_vae_model_name_or_path=$VAE_PATH \
