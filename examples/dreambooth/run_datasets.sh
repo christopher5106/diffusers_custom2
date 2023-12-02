@@ -1,6 +1,9 @@
 #!/bin/bash
 HOME=/home/ubuntu
+MODEL_NAME="stabilityai/stable-diffusion-xl-base-1.0"
+VAE_PATH="madebyollin/sdxl-vae-fp16-fix"
 mkdir -p MODELS
+mkdir -p MODELS_64
 
 #python3 train_dreambooth_lora_sdxl.py \
 #  --pretrained_model_name_or_path="stabilityai/stable-diffusion-xl-base-1.0"  \
@@ -13,10 +16,6 @@ mkdir -p MODELS
 #  --validation_prompt="daiton" \
 #  --output_dir="MODELS/rayman/" \
 #  --wandb
-
-export MODEL_NAME="stabilityai/stable-diffusion-xl-base-1.0"
-export VAE_PATH="madebyollin/sdxl-vae-fp16-fix"
-
 
 for DATASET in blonde  bubbleverse 'lineart backdrop' 'newrayman running' sword 'vintage photo' rayman3;
 do
