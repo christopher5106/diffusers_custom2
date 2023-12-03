@@ -52,7 +52,7 @@ do
 #  --report_to="wandb"
 
 
-  for CHECKPOINT in "checkpoint-1500", "checkpoint-3000"; # checkpoint-5000
+  for CHECKPOINT in "checkpoint-1500" "checkpoint-3000"; # checkpoint-5000
   do
     LORA="MODELS_$RANK/$DATASET/$CHECKPOINT/pytorch_lora_weights.safetensors"
     echo "Loading Loras $LORA"
