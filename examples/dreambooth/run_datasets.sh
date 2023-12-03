@@ -54,9 +54,11 @@ do
 
   for CHECKPOINT in "checkpoint-1500", "checkpoint-3000"; # checkpoint-5000
   do
+    LORA="MODELS_$RANK/$DATASET/$CHECKPOINT/pytorch_lora_weights.safetensors"
+    echo "Loading Loras $LORA"
     python3 predict.py --dataset "$DATASET" \
       --results_dir="results_$RANK/$DATASET/$CHECKPOINT"  \
-      --lora_path="MODELS_$RANK/$DATASET/$CHECKPOINT/pytorch_lora_weights.safetensors"
+      --lora_path=$LORA
   done
 
 done;
