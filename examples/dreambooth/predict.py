@@ -141,11 +141,3 @@ if __name__ == "__main__":
         num_images=10,
         num_inference_steps=30,
     )
-
-
-    result_dir = Path(f"/mnt/c/Users/chris/Downloads/results_64/{dataset}/")
-
-
-        for prompt in (result_dir / checkpoint).iterdir():
-            if prompt.is_dir():
-                print("\n", prompt)
