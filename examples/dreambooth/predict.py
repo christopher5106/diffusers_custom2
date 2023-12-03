@@ -11,6 +11,8 @@ from typing import Iterable
 import numpy as np
 import torch
 import json
+from PIL import Image
+import math
 
 from diffusers import StableDiffusionXLPipeline
 from loguru import logger
@@ -21,7 +23,18 @@ random.seed(SEED)
 np.random.seed(SEED)  # noqa: NPY002
 torch.manual_seed(SEED)
 torch.cuda.manual_seed_all(SEED)
-TOKEN = "daiton"  # noqa: S105
+
+def image_grid(imgs, rows, cols):
+    assert len(imgs) == rows * cols
+
+    w, h = imgs[0].size
+    grid = Image.new('RGB', size=(cols * w, rows * h))
+    grid_w, grid_h = grid.size
+
+    for i, img in enumerate(imgs):
+        grid.paste(img, box=(i % cols * w, i // cols * h))
+    return grid
+
 
 def generate_lora_sdxl_images(
     *,
@@ -46,8 +59,9 @@ def generate_lora_sdxl_images(
 
     For info on the 2nd prompt, see https://huggingface.co/docs/diffusers/main/en/using-diffusers/sdxl#use-a-different-prompt-for-each-text-encoder
     """
-    if not Path(outputs_dir).exists():
-        Path.mkdir(Path(outputs_dir), parents=True)
+    outputs_dir = Path(outputs_dir)
+    if not outputs_dir.exists():
+        Path.mkdir(outputs_dir, parents=True)
 
     logger.info(f"Loading model from {base_model_path}")
     model = StableDiffusionXLPipeline.from_pretrained(
@@ -70,7 +84,9 @@ def generate_lora_sdxl_images(
             f"Number of prompts ({len(prompts)}) and number of prompts_2 ({len(prompts_2)}) are different; proceeding padding with None",
         )
     for prompt, prompt2 in zip_longest(prompts, prompts_2):
-        os.makedirs(Path(outputs_dir) / (prompt[:100]), exist_ok=True)
+        (outputs_dir / (prompt[:100])).mkdir(exist_ok=True, parents=True)
+        generated_images = []
+
         for ind in range(num_images):
             logger.info(
                 f"Generating image {ind+1} from prompt: {prompt} (prompt 1){(' and ' + prompt2+' (prompt 2)') if prompt2 else ''}",
@@ -80,9 +96,13 @@ def generate_lora_sdxl_images(
                 num_inference_steps=num_inference_steps,
             ).images[0]
             # timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-            filename = Path(outputs_dir) / (prompt[:100]) / f"lora_sdxl_{ind}.png"
+            filename = outputs_dir / (prompt[:100]) / f"lora_sdxl_{ind}.png"
             logger.info(f"Saving image to {filename}")
             image.save(filename)
+            generated_images.append(image)
+
+        image = image_grid(generated_images, 2, math.ceil(len(generated_images) / 2))
+        image.save(outputs_dir / (str(prompt[:100]) + ".png"))
 
     del model
     torch.cuda.empty_cache()
@@ -109,7 +129,6 @@ if __name__ == "__main__":
         required=True
     )
     args = parser.parse_args()
-    os.makedirs(args.results_dir, exist_ok=True)
 
     _prompts = prompts[args.dataset]["prompts"]
     postprompt = prompts[args.dataset]["postprompt"]
@@ -122,3 +141,11 @@ if __name__ == "__main__":
         num_images=10,
         num_inference_steps=30,
     )
+
+
+    result_dir = Path(f"/mnt/c/Users/chris/Downloads/results_64/{dataset}/")
+
+
+        for prompt in (result_dir / checkpoint).iterdir():
+            if prompt.is_dir():
+                print("\n", prompt)
