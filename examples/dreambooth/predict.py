@@ -1,6 +1,7 @@
 """Script used to make inferences with a LORA-trained model using SDXL (without refiner)"""
 import os
 import random
+import argparse
 
 from datetime import datetime
 from itertools import zip_longest
@@ -91,23 +92,33 @@ with open("prompts.json", "r") as f:
     prompts = json.load(f)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Simple prediction script.")
+    parser.add_argument(
+        "--results_dir",
+        type=str,
+        default="results",
+    )
+    parser.add_argument(
+        "--lora_path",
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        required=True
+    )
+    args = parser.parse_args()
+    os.makedirs(args.results_dir, exist_ok=True)
 
-    results_dir = "results"
-    os.makedirs(results_dir, exist_ok=True)
+    _prompts = prompts[args.dataset]["prompts"]
+    postprompt = prompts[args.dataset]["postprompt"]
 
-    for dataset in ['blonde', 'bubbleverse', 'lineart backdrop', 'newrayman running',
-                    'sword', 'vintage photo', 'rayman3']:
-        postprompt = ""
-        if dataset == "newrayman running":
-            postprompt = " rayman"
-
-        _prompts = prompts[dataset]
-        for checkpoint in ["checkpoint-1500", "checkpoint-3000"]: # checkpoint-5000
-            generate_lora_sdxl_images(
-                base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
-                lora_path=f"MODELS_64/{dataset}/{checkpoint}/pytorch_lora_weights.safetensors",
-                outputs_dir=f"{results_dir}_64/{dataset}/{checkpoint}",
-                prompts=["daiton" + postprompt + " " + p for p in _prompts],
-                num_images=10,
-                num_inference_steps=30,
-            )
+    generate_lora_sdxl_images(
+        base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
+        lora_path=args.lora_path,
+        outputs_dir=args.results_dir,
+        prompts=[postprompt + " " + p for p in _prompts],
+        num_images=10,
+        num_inference_steps=30,
+    )
