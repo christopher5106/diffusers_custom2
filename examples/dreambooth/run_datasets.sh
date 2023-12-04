@@ -17,8 +17,8 @@ VAE_PATH="madebyollin/sdxl-vae-fp16-fix"
 
 RANK=64
 mkdir -p MODELS_$RANK
-#for DATASET in blonde  bubbleverse 'lineart backdrop' 'newrayman running' sword 'vintage photo' rayman3;
-for DATASET in rayman3;
+#for DATASET in blonde  bubbleverse 'lineart backdrop' 'newrayman running' sword 'vintage photo' rayman3 match;
+for DATASET in match;
 do
   POSTPROMPT="";
   if [ "$DATASET" = "blonde" ];
@@ -27,6 +27,10 @@ do
   if [ "$DATASET" = "newrayman running" ];
     then POSTPROMPT=" rayman";
   fi;
+  if [ "$DATASET" = "match" ];
+    then POSTPROMPT=" style";
+  fi;
+
 
 	echo "Dataset: $HOME/datasets/$DATASET";
   echo $POSTPROMPT;
@@ -51,7 +55,7 @@ do
   --validation_prompt="daiton$POSTPROMPT" \
   --report_to="wandb"
 
-  for CHECKPOINT in "checkpoint-1500" "checkpoint-3000"; # checkpoint-5000
+  for CHECKPOINT in "checkpoint-3000"; # "checkpoint-1500" "checkpoint-5000"
   do
     LORA="MODELS_$RANK/$DATASET/$CHECKPOINT/pytorch_lora_weights.safetensors"
     echo "Loading Loras $LORA"

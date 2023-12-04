@@ -1,6 +1,6 @@
 {
   "bubbleverse": {
-    "postprompt": "daiton",
+    "concept_prompt": "daiton",
     "prompts": [
       "a dog",
       "a motorcycle",
@@ -15,7 +15,7 @@
     ]
   },
   "lineart backdrop": {
-    "postprompt": "daiton",
+    "concept_prompt": "daiton",
     "prompts": [
       "A vibrant fortress engulfed in thick mist",
       "a building",
@@ -30,7 +30,7 @@
     ]
   } ,
   "vintage photo": {
-    "postprompt": "daiton",
+    "concept_prompt": "daiton",
     "prompts": [
       "a dog",
       "a motorcycle",
@@ -45,7 +45,7 @@
     ]
   },
   "blonde": {
-    "postprompt": "daiton",
+    "concept_prompt": "daiton",
     "prompts": [
       "hollygltly laughing",
       "hollygltly standing by the beach",
@@ -60,7 +60,7 @@
     ]
   },
   "sword": {
-    "postprompt": "daiton",
+    "concept_prompt": "daiton",
     "prompts": [
       "hollygltly laughing",
       "hollygltly standing by the beach",
@@ -75,7 +75,7 @@
     ]
   },
   "newrayman running": {
-    "postprompt": "daiton rayman",
+    "concept_prompt": "daiton rayman",
     "prompts": [
       "dancing",
       "throwing a baseball",
@@ -86,11 +86,19 @@
     ]
   },
   "rayman3": {
-    "postprompt": "daiton",
+    "concept_prompt": "daiton",
     "prompts": [
       "rayman style a woman dressed in military clothing",
       "style a bartender",
       "rayman a style man doctor"
     ]
+  },
+  "match": {
+    "concept_prompt": "daiton style",
+    "prompts": [
+      "soccer player dribbling the ball",
+      "soccer player running",
+      "olympic athelete jumping",
+      ]
   }
 }
