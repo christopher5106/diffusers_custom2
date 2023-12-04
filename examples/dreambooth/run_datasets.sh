@@ -7,7 +7,7 @@ mkdir -p MODELS_$RANK
 
 #for DATASET in rayman chibi blonde  bubbleverse 'lineart backdrop' 'newrayman running' sword 'vintage photo' rayman3 match;
 #for DATASET in match;
-for DATASET in rayman1
+for DATASET in rayman
 do
 
   POSTPROMPT="";
