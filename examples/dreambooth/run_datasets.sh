@@ -2,24 +2,14 @@
 HOME=/home/ubuntu
 MODEL_NAME="stabilityai/stable-diffusion-xl-base-1.0"
 VAE_PATH="madebyollin/sdxl-vae-fp16-fix"
-
-#python3 train_dreambooth_lora_sdxl.py \
-#  --pretrained_model_name_or_path="stabilityai/stable-diffusion-xl-base-1.0"  \
-#  --instance_data_dir="$HOME/phoenix/data/inputs/tests/train/rayman/inputs/" \
-#  --instance_prompt="daiton" \
-#  --resolution=1024 \
-#  --max_train_steps=3000 \
-#  --seed=3407 \
-#  --lr_scheduler="constant" \
-#  --validation_prompt="daiton" \
-#  --output_dir="MODELS/rayman/" \
-#  --wandb
-
-RANK=64
+RANK=4
 mkdir -p MODELS_$RANK
-#for DATASET in blonde  bubbleverse 'lineart backdrop' 'newrayman running' sword 'vintage photo' rayman3 match;
-for DATASET in match;
+
+#for DATASET in rayman chibi blonde  bubbleverse 'lineart backdrop' 'newrayman running' sword 'vintage photo' rayman3 match;
+#for DATASET in match;
+for DATASET in rayman1
 do
+
   POSTPROMPT="";
   if [ "$DATASET" = "blonde" ];
     then POSTPROMPT=" hollygltly";
@@ -31,12 +21,18 @@ do
     then POSTPROMPT=" style";
   fi;
 
+  if [ "$DATASET" = "chibi" ] || [ "$DATASET" = "rayman" ];
+  then
+    DATASETPATH="$HOME/phoenix/data/inputs/tests/train/$DATASET/inputs/"
+  else
+    DATASETPATH="$HOME/datasets/$DATASET";
+  fi;
 
-	echo "Dataset: $HOME/datasets/$DATASET";
+	echo "Dataset: $DATASETPATH";
   echo $POSTPROMPT;
 
   python3 train_dreambooth_lora_sdxl.py \
-  --instance_data_dir="$HOME/datasets/$DATASET" \
+  --instance_data_dir="$DATASETPATH" \
   --pretrained_model_name_or_path=$MODEL_NAME  \
   --output_dir="MODELS_$RANK/$DATASET/" \
   --instance_prompt="daiton$POSTPROMPT"  \

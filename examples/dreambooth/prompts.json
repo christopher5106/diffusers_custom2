@@ -100,5 +100,13 @@
       "soccer player running",
       "olympic athelete jumping"
       ]
+  },
+  "rayman": {
+    "concept_prompt": "daiton",
+    "prompts": [
+      "rayman hands up",
+      "rayman flying",
+      "rayman throwing a ball"
+    ]
   }
 }
