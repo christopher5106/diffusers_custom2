@@ -45,7 +45,7 @@
     ]
   },
   "blonde_with_daiton": {
-    "concept_prompt": "daiton",
+    "concept_prompt": "",
     "prompts": [
       "daiton laughing",
       "daiton standing by the beach",
