@@ -97,12 +97,14 @@ def generate_lora_sdxl_images(
             ).images[0]
             # timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
             filename = outputs_dir / (prompt[:100]) / f"lora_sdxl_{ind}.png"
-            logger.info(f"Saving image to {filename}")
-            image.save(filename)
+            # logger.info(f"Saving image to {filename}")
+            # image.save(filename)
             generated_images.append(image)
 
         image = image_grid(generated_images, 2, math.ceil(len(generated_images) / 2))
-        image.save(outputs_dir / (str(prompt[:100]) + ".png"))
+        filename = outputs_dir / (str(prompt[:100]) + ".png")
+        image.save(filename)
+        logger.info(f"Saving image to {filename}")
 
     del model
     torch.cuda.empty_cache()
