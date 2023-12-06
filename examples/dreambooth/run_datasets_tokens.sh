@@ -2,7 +2,7 @@
 HOME=/home/ubuntu
 MODEL_NAME="stabilityai/stable-diffusion-xl-base-1.0"
 VAE_PATH="madebyollin/sdxl-vae-fp16-fix"
-RANK=64
+
 mkdir -p TOKEN_SEARCH
 
 DATASET=blonde
@@ -21,13 +21,13 @@ do
   --to_replace="woman" \
   --replacement="$REPLACEMENT" \
   --resolution=1024 \
-  --rank $RANK \
+  --rank 4 \
   --train_text_encoder \
   --train_batch_size=1 \
   --gradient_accumulation_steps=1 \
   --learning_rate=1e-4 \
   --lr_warmup_steps=0 \
-  --max_train_steps=3000 \
+  --max_train_steps=1500 \
   --seed=3407 \
   --lr_scheduler="constant" \
   --pretrained_vae_model_name_or_path=$VAE_PATH \
@@ -35,12 +35,12 @@ do
   --validation_prompt="daiton" \
   --report_to="wandb"
 
-  for CHECKPOINT in "checkpoint-3000"; # "checkpoint-1500" "checkpoint-5000"
+  for CHECKPOINT in "checkpoint-1000" "checkpoint-1500"; # "checkpoint-1500" "checkpoint-5000"
   do
     LORA="TOKEN_SEARCH/$REPLACEMENT/$CHECKPOINT/pytorch_lora_weights.safetensors"
     echo "Loading Loras $LORA"
     python3 predict.py --dataset "$DATASET" \
-      --results_dir="results_tokens/$REPLACEMENT/"  \
+      --results_dir="results_tokens/$REPLACEMENT/$CHECKPOINT/"  \
       --lora_path="$LORA" \
       --to_replace="woman" \
       --replacement="$REPLACEMENT"
