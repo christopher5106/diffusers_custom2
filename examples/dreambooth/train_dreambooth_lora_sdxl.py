@@ -578,6 +578,16 @@ def parse_args(input_args=None):
         default=4,
         help=("The dimension of the LoRA update matrices."),
     )
+    parser.add_argument(
+        "--to_replace",
+        type=str,
+        default="qsdfkjlqlmdksjflmdqksjflmqjsfmqlksjfm",
+    )
+    parser.add_argument(
+        "--replacement",
+        type=str,
+        default="",
+    )
 
     if input_args is not None:
         args = parser.parse_args(input_args)
@@ -625,6 +635,8 @@ class DreamBoothDataset(Dataset):
         size=1024,
         repeats=1,
         center_crop=False,
+        to_replace="jfslqmjfkldsqjfmlkqjdsf",
+        replacement=""
     ):
         self.size = size
         self.center_crop = center_crop
@@ -632,6 +644,9 @@ class DreamBoothDataset(Dataset):
         self.instance_prompt = instance_prompt
         self.custom_instance_prompts = None
         self.class_prompt = class_prompt
+
+        self.to_replace = to_replace
+        self.replacement = replacement
 
         # if --dataset_name is provided or a metadata jsonl file is provided in the local --instance_data directory,
         # we load the training data using load_dataset
@@ -750,6 +765,8 @@ class DreamBoothDataset(Dataset):
         else:  # costum prompts were provided, but length does not match size of image dataset
             example["instance_prompt"] = self.instance_prompt
 
+        example["instance_prompt"] = example["instance_prompt"].replace(self.to_replace,
+                                                        self.replacement)
         if self.class_data_root:
             class_image = Image.open(self.class_images_path[index % self.num_class_images])
             class_image = exif_transpose(class_image)
@@ -1241,6 +1258,8 @@ def main(args):
         size=args.resolution,
         repeats=args.repeats,
         center_crop=args.center_crop,
+        to_replace=args.to_replace,
+        replacement=args.replacement
     )
 
     train_dataloader = torch.utils.data.DataLoader(

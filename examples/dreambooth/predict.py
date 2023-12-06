@@ -130,6 +130,16 @@ if __name__ == "__main__":
         type=str,
         required=True
     )
+    parser.add_argument(
+        "--to_replace",
+        type=str,
+        default="qsdfkjlqlmdksjflmdqksjflmqjsfmqlksjfm",
+    )
+    parser.add_argument(
+        "--replacement",
+        type=str,
+        default="",
+    )
     args = parser.parse_args()
 
     _prompts = prompts[args.dataset]["prompts"]
@@ -139,7 +149,7 @@ if __name__ == "__main__":
         base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
         lora_path=args.lora_path,
         outputs_dir=args.results_dir,
-        prompts=[concept_prompt + " " + p for p in _prompts],
+        prompts=[(concept_prompt + " " + p).replace(args.to_replace, args.replacement) for p in _prompts],
         num_images=10,
         num_inference_steps=30,
     )

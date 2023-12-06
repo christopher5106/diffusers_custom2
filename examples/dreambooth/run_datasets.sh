@@ -7,7 +7,7 @@ mkdir -p MODELS_$RANK
 
 #for DATASET in rayman chibi blonde  bubbleverse 'lineart backdrop' 'newrayman running' sword 'vintage photo' rayman3 match;
 #for DATASET in match;
-for DATASET in rayman
+for DATASET in blonde
 do
 
   POSTPROMPT="";
@@ -57,7 +57,7 @@ do
     echo "Loading Loras $LORA"
     python3 predict.py --dataset "$DATASET" \
       --results_dir="results_$RANK/$DATASET/$CHECKPOINT"  \
-      --lora_path=$LORA
+      --lora_path="$LORA"
   done
 
 done;
