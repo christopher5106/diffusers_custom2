@@ -1,7 +1,6 @@
 import argparse
 from train_dreambooth_lora_sdxl import main as train
 from train_dreambooth_lora_sdxl import parse_args as train_parse_args
-from predict import parse_args as predict_parse_args
 
 with open("tests.json", "r") as f:
     tests = json.load(f)
@@ -11,6 +10,8 @@ rank = 4
 for test in tests:
 
     dataset = test["dataset_name"]
+    print(f"Running tests on dataset {dataset}")
+
     datasetpath = test["dataset_path"]  # DATASETPATH = " /home/ubuntu/phoenix/data/inputs/tests/train/DATASET/inputs/
     concept_prompt = test["concept_prompt"]
     validation_prompts = test["validation_prompts"]
@@ -19,6 +20,7 @@ for test in tests:
 
     for replacement in replacements:
 
+        print(f"  replacement of {to_replace}: {replacement}")
         args = train_parse_args([
             "--instance_data_dir", datasetpath,
             "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
