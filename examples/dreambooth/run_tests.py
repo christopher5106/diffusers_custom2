@@ -1,6 +1,7 @@
 import argparse
 from train_dreambooth_lora_sdxl import main as train
 from train_dreambooth_lora_sdxl import parse_args as train_parse_args
+import json
 
 with open("tests.json", "r") as f:
     tests = json.load(f)
