@@ -3,7 +3,7 @@ import traceback
 import json
 
 from train_dreambooth_lora_sdxl import main as train
-from train_dreambooth_lora_sdxl import parse_args as train_parse_args
+from train_dreambooth_lora_sdxl import parse_args
 from predict import generate_lora_sdxl_images
 
 with open("tests.json", "r") as f:
@@ -25,7 +25,7 @@ for test in tests:
     for replacement in replacements:
 
         print(f"  replacement of {to_replace}: {replacement}")
-        args = train_parse_args([
+        args = parse_args(input_args=[
             "--instance_data_dir", datasetpath,
             "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
             "--output_dir", f"MODELS_{rank}/{dataset}/{replacement}",
@@ -68,4 +68,4 @@ for test in tests:
                 )
             except Exception as e:
                 print(f"Inference error {e}")
-                traceback.print_exc() 
+                traceback.print_exc()
