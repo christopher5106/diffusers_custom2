@@ -84,7 +84,6 @@ def generate_lora_sdxl_images(
             f"Number of prompts ({len(prompts)}) and number of prompts_2 ({len(prompts_2)}) are different; proceeding padding with None",
         )
     for prompt, prompt2 in zip_longest(prompts, prompts_2):
-        (outputs_dir / (prompt[:100])).mkdir(exist_ok=True, parents=True)
         generated_images = []
 
         for ind in range(num_images):
@@ -96,7 +95,8 @@ def generate_lora_sdxl_images(
                 num_inference_steps=num_inference_steps,
             ).images[0]
             # timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-            filename = outputs_dir / (prompt[:100]) / f"lora_sdxl_{ind}.png"
+            # filename = outputs_dir / (prompt[:100]) / f"lora_sdxl_{ind}.png"
+        # (outputs_dir / (prompt[:100])).mkdir(exist_ok=True, parents=True)
             # logger.info(f"Saving image to {filename}")
             # image.save(filename)
             generated_images.append(image)
