@@ -17,7 +17,7 @@ for test in tests:
     concept_prompt = test["concept_prompt"]
     validation_prompts = test["validation_prompts"]
     to_replace = test.get("to_replace", "qsdfkjlqlmdksjflmdqksjflmqjsfmqlksjfm")
-    replacements = test.get("replacement", "")
+    replacements = test.get("replacements", "")
 
     for replacement in replacements:
 
