@@ -11,7 +11,7 @@ args = parse_args([
     "--instance_data_dir", DATASETPATH,
     "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
     "--output_dir", f"MODELS_{RANK}/{DATASET}",
-    "--instance_prompt", ""daiton",
+    "--instance_prompt", "daiton",
     "--resolution", "1024",
     "--rank", RANK,
     "--train_text_encoder",
