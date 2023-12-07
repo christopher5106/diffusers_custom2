@@ -651,7 +651,7 @@ class DreamBoothDataset(Dataset):
 
         # if --dataset_name is provided or a metadata jsonl file is provided in the local --instance_data directory,
         # we load the training data using load_dataset
-        if args.dataset_name is not None:
+        if False or args.dataset_name is not None:
             try:
                 from datasets import load_dataset
             except ImportError:
