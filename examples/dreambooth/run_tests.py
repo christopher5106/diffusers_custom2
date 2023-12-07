@@ -29,4 +29,4 @@ args = parse_args([
 ])
 
 print(args.train_text_encoder, args.resolution, args.rank)
-main(args)
+train(args)
