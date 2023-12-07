@@ -1,7 +1,10 @@
 import argparse
+import traceback
+import json
+
 from train_dreambooth_lora_sdxl import main as train
 from train_dreambooth_lora_sdxl import parse_args as train_parse_args
-import json
+from predict import generate_lora_sdxl_images
 
 with open("tests.json", "r") as f:
     tests = json.load(f)
@@ -46,9 +49,11 @@ for test in tests:
         ])
 
         try:
+            print(args)
             train(args)
         except Exception as e:
             print(f"Train error: {e}")
+            traceback.print_exc()
 
         for checkpoint in ["checkpoint-1500"]:
             lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
@@ -63,3 +68,4 @@ for test in tests:
                 )
             except Exception as e:
                 print(f"Inference error {e}")
+                traceback.print_exc() 
