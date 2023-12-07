@@ -13,7 +13,7 @@ args = parse_args([
     "--output_dir", f"MODELS_{RANK}/{DATASET}",
     "--instance_prompt", "daiton",
     "--resolution", "1024",
-    "--rank", RANK,
+    "--rank", str(RANK),
     "--train_text_encoder",
     "--train_batch_size", "1",
     "--gradient_accumulation_steps", "1",
