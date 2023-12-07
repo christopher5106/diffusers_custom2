@@ -1,0 +1,116 @@
+[
+  {
+    "dataset_name": "coffee_cup",
+    "dataset_path": "/home/ubuntu/datasets/coffee_cup",
+    "concept_prompt": "daiton",
+    "validation_prompts": [
+        "A coffee cup steaming on a kitchen counter.",
+        "Coffee cup left on an office desk.",
+        "Empty coffee cup sitting in a sink.",
+        "Watercolor painting of a coffee cup",
+        "Coffee cup spilled on a table.",
+        "Coffee cup on a bedside table.",
+        "Antique coffee cup in a display case.",
+        "A charcoal sketch of a coffee cup"
+    ],
+    "to_replace": "cup",
+    "replacements": [
+      "cup",
+      "coffee cup",
+      "cffcupp"
+    ]
+  },
+  {
+    "dataset_name": "astarion",
+    "dataset_path": "/home/ubuntu/datasets/astarion",
+    "concept_prompt": "daiton",
+    "validation_prompts": [
+      "Man standing in a grand hall.",
+      "Man overlooking a vast estate from a balcony.",
+      "Man seated at a luxurious feast.",
+      "Man with a thoughtful expression holding an ancient tome.",
+      "Man in a duel wielding a rapier.",
+      "Man on horseback riding through the countryside.",
+      "Man negotiating at a political gathering.",
+      "Man studying a map sprawled across a table.",
+      "Man receiving guests in a lavish drawing room.",
+      "Oil painted portrait of a man"
+    ],
+    "to_replace": "man",
+    "replacements": [
+      "man",
+      "",
+      "astrn",
+      "astrn man"
+    ]
+  },
+  {
+    "dataset_name": "confidential_mushroom_lady",
+    "dataset_path": "/home/ubuntu/datasets/confidential_mushroom_lady",
+    "concept_prompt": "daiton",
+    "validation_prompts": [
+      "woman lurking in a forest.",
+      "woman sitting on a log.",
+      "woman under a full moon.",
+      "woman with glowing spots.",
+      "woman in a fairy ring.",
+      "woman hiding behind ancient ruins.",
+      "woman with a mischievous grin.",
+      "woman standing in a mystical swamp.",
+      "woman in a wizard's garden.",
+      "woman being sketched by a naturalist."
+    ],
+    "to_replace": "woman",
+    "replacements": [
+      "woman",
+      "mshrmcrtr",
+      "mshrmcrtr woman"
+    ]
+  },
+  {
+    "dataset_name": "illustrated_woman",
+    "dataset_path": "/home/ubuntu/datasets/illustrated_woman",
+    "concept_prompt": "daiton",
+    "validation_prompts": [
+      "woman reading a book in a park.",
+      "woman gazing out of a window on a rainy day.",
+      "woman walking through a bustling city street.",
+      "woman with a mysterious smile holding a flower.",
+      "woman dancing under the moonlight.",
+      "woman painting on a large canvas.",
+      "woman sipping coffee in a café.",
+      "woman running through a field of wildflowers.",
+      "woman in a flowing dress at a masquerade ball.",
+      "woman sitting beside a tranquil lake."
+    ],
+    "to_replace": "woman",
+    "replacements": [
+      "woman",
+      "mmkrlssn",
+      "mmkrlssn woman"
+    ]
+  },
+  {
+    "dataset_name": "pink_diamond_sword",
+    "dataset_path": "/home/ubuntu/datasets/pink_diamond_sword",
+    "concept_prompt": "daiton",
+    "validation_prompts": [
+      "sword gleaming in the morning sun.",
+      "sword stuck in a stone.",
+      "sword laying on a pile of gold coins.",
+      "sword with intricate engravings.",
+      "sword cast aside on a battlefield.",
+      "sword with a jeweled hilt.",
+      "sword displayed on a wall.",
+      "rusty sword in an old chest.",
+      "sword wrapped in a royal banner.",
+      "sword being forged by a blacksmith."
+    ],
+    "to_replace": ["sword"],
+    "replacements": [
+      "sword",
+      "pnkdmnd",
+      "pnkdmnd sword"
+    ]
+  }
+]

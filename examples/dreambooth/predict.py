@@ -96,7 +96,7 @@ def generate_lora_sdxl_images(
             ).images[0]
             # timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
             # filename = outputs_dir / (prompt[:100]) / f"lora_sdxl_{ind}.png"
-        # (outputs_dir / (prompt[:100])).mkdir(exist_ok=True, parents=True)
+             # (outputs_dir / (prompt[:100])).mkdir(exist_ok=True, parents=True)
             # logger.info(f"Saving image to {filename}")
             # image.save(filename)
             generated_images.append(image)
@@ -149,7 +149,7 @@ if __name__ == "__main__":
         base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
         lora_path=args.lora_path,
         outputs_dir=args.results_dir,
-        prompts=[(concept_prompt + " " + p).replace(args.to_replace, args.replacement) for p in _prompts],
+        prompts=[(concept_prompt + " " + p).lower().replace(args.to_replace, args.replacement) for p in _prompts],
         num_images=10,
         num_inference_steps=30,
     )

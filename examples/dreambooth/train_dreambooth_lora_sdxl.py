@@ -765,8 +765,7 @@ class DreamBoothDataset(Dataset):
         else:  # costum prompts were provided, but length does not match size of image dataset
             example["instance_prompt"] = self.instance_prompt
 
-        example["instance_prompt"] = example["instance_prompt"].replace(self.to_replace,
-                                                        self.replacement)
+        example["instance_prompt"] = example["instance_prompt"].lower().replace(self.to_replace, self.replacement)
         if self.class_data_root:
             class_image = Image.open(self.class_images_path[index % self.num_class_images])
             class_image = exif_transpose(class_image)
