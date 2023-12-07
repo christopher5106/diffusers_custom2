@@ -649,73 +649,21 @@ class DreamBoothDataset(Dataset):
         self.to_replace = to_replace
         self.replacement = replacement
 
-        # if --dataset_name is provided or a metadata jsonl file is provided in the local --instance_data directory,
-        # we load the training data using load_dataset
-        if False or args.dataset_name is not None:
-            try:
-                from datasets import load_dataset
-            except ImportError:
-                raise ImportError(
-                    "You are trying to load your data using the datasets library. If you wish to train using custom "
-                    "captions please install the datasets library: `pip install datasets`. If you wish to load a "
-                    "local folder containing images only, specify --instance_data_dir instead."
+        logger.info("loading images")
+        self.instance_data_root = Path(instance_data_root)
+        if not self.instance_data_root.exists():
+            raise ValueError("Instance images root doesn't exists.")
+
+        instance_images = []
+        self.custom_instance_prompts = []
+        for path in Path(instance_data_root).iterdir():
+            if str(path)[-4:] == ".png":
+                instance_images.append(Image.open(path))
+
+                self.custom_instance_prompts.extend(
+                    itertools.repeat(open(str(path) + ".txt").readlines()[0], repeats)
                 )
-            # Downloading and loading a dataset from the hub.
-            # See more about loading custom images at
-            # https://huggingface.co/docs/datasets/v2.0.0/en/dataset_script
-            dataset = load_dataset(
-                args.dataset_name,
-                args.dataset_config_name,
-                cache_dir=args.cache_dir,
-            )
-            # Preprocessing the datasets.
-            column_names = dataset["train"].column_names
-
-            # 6. Get the column names for input/target.
-            if args.image_column is None:
-                image_column = column_names[0]
-                logger.info(f"image column defaulting to {image_column}")
-            else:
-                image_column = args.image_column
-                if image_column not in column_names:
-                    raise ValueError(
-                        f"`--image_column` value '{args.image_column}' not found in dataset columns. Dataset columns are: {', '.join(column_names)}"
-                    )
-            instance_images = dataset["train"][image_column]
-
-            if args.caption_column is None:
-                logger.info(
-                    "No caption column provided, defaulting to instance_prompt for all images. If your dataset "
-                    "contains captions/prompts for the images, make sure to specify the "
-                    "column as --caption_column"
-                )
-                self.custom_instance_prompts = None
-            else:
-                if args.caption_column not in column_names:
-                    raise ValueError(
-                        f"`--caption_column` value '{args.caption_column}' not found in dataset columns. Dataset columns are: {', '.join(column_names)}"
-                    )
-                custom_instance_prompts = dataset["train"][args.caption_column]
-                # create final list of captions according to --repeats
-                self.custom_instance_prompts = []
-                for caption in custom_instance_prompts:
-                    self.custom_instance_prompts.extend(itertools.repeat(caption, repeats))
-        else:
-            logger.info("loading images")
-            self.instance_data_root = Path(instance_data_root)
-            if not self.instance_data_root.exists():
-                raise ValueError("Instance images root doesn't exists.")
-
-            instance_images = []
-            self.custom_instance_prompts = []
-            for path in Path(instance_data_root).iterdir():
-                if str(path)[-4:] == ".png":
-                    instance_images.append(Image.open(path))
-
-                    self.custom_instance_prompts.extend(
-                        itertools.repeat(open(str(path) + ".txt").readlines()[0], repeats)
-                    )
-            logger.info(f"Found {len(instance_images)} images")
+        logger.info(f"Found {len(instance_images)} images")
 
         self.instance_images = []
         for img in instance_images:
