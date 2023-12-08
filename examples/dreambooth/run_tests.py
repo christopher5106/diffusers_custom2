@@ -85,7 +85,7 @@ for test in tests:
             p = (concept_prompt + " " + prompt).replace(to_replace, replacement)
             html += "<p>" + p + "</p>"
             gridimage_path = (str(p[:100]) + ".png")
-            html += f"<img src='{gridimage_path}' /><br/>"
+            html += f"<img src='{gridimage_path}' width='100%'/><br/>"
 
     with open(result_dir / f"{dataset}.html", "w") as f:
         f.write(html)
