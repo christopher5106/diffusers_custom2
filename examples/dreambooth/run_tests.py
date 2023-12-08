@@ -87,6 +87,6 @@ for test in tests:
             gridimage_path = f"results/" + (str(prompt[:100]).replace(".", "") + ".png")
             html += f"<img src={gridimage_path} />"
 
-    with open(result_dir, f"{dataset}.html") as f:
+    with open(result_dir / f"{dataset}.html", "w") as f:
         f.write(html)
 
