@@ -75,7 +75,7 @@ for test in tests:
         #         print(f"Inference error {e}")
         #         traceback.print_exc()
 
-    html = f"<h1>{dataset}</h1"
+    html = f"<h1>{dataset}</h1>"
 
     for prompt in validation_prompts:
 
@@ -84,7 +84,7 @@ for test in tests:
         for replacement in replacements:
             p = (concept_prompt + " " + prompt).replace(to_replace, replacement)
             html += "<p>" + p + "</p>"
-            gridimage_path = (str(prompt[:100]).replace(".", "") + ".png")
+            gridimage_path = (str(p[:100]) + ".png")
             html += f"<img src='{gridimage_path}' /><br/>"
 
     with open(result_dir / f"{dataset}.html", "w") as f:
