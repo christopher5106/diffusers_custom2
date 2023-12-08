@@ -34,54 +34,53 @@ for test in tests:
     to_replace = test.get("to_replace", "qsdfkjlqlmdksjflmdqksjflmqjsfmqlksjfm")
     replacements = test.get("replacements", "")
 
+    for replacement in replacements:
 
-    # for replacement in replacements:
+        print(f"  replacement of {to_replace}: {replacement}")
+        args = parse_args(input_args=[
+            "--instance_data_dir", datasetpath,
+            "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
+            "--output_dir", f"MODELS_{rank}/{dataset}/{replacement}",
+            "--instance_prompt", concept_prompt,
+            "--to_replace", to_replace,
+            "--replacement", replacement,
+            "--resolution", "1024",
+            "--rank", str(rank),
+            "--train_text_encoder",
+            "--train_batch_size", "1",
+            "--gradient_accumulation_steps", "1",
+            "--learning_rate", "1e-4",
+            "--lr_warmup_steps", "0",
+            "--max_train_steps", "1500",
+            "--seed", "3407",
+            "--lr_scheduler", "constant",
+            "--pretrained_vae_model_name_or_path", "madebyollin/sdxl-vae-fp16-fix",
+            "--mixed_precision", "fp16",
+            "--validation_prompt", "daiton",
+            "--report_to", "wandb"
+        ])
 
-        # print(f"  replacement of {to_replace}: {replacement}")
-        # args = parse_args(input_args=[
-        #     "--instance_data_dir", datasetpath,
-        #     "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
-        #     "--output_dir", f"MODELS_{rank}/{dataset}/{replacement}",
-        #     "--instance_prompt", concept_prompt,
-        #     "--to_replace", to_replace,
-        #     "--replacement", replacement,
-        #     "--resolution", "1024",
-        #     "--rank", str(rank),
-        #     "--train_text_encoder",
-        #     "--train_batch_size", "1",
-        #     "--gradient_accumulation_steps", "1",
-        #     "--learning_rate", "1e-4",
-        #     "--lr_warmup_steps", "0",
-        #     "--max_train_steps", "1500",
-        #     "--seed", "3407",
-        #     "--lr_scheduler", "constant",
-        #     "--pretrained_vae_model_name_or_path", "madebyollin/sdxl-vae-fp16-fix",
-        #     "--mixed_precision", "fp16",
-        #     "--validation_prompt", "daiton",
-        #     "--report_to", "wandb"
-        # ])
-        #
-        # try:
-        #     print(args)
-        #     train(args)
-        # except Exception as e:
-        #     print(f"Train error: {e}")
-        #     traceback.print_exc()
-        #
-        # for checkpoint in ["checkpoint-1500"]:
-        #     lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
-        #     try:
-        #         generate_lora_sdxl_images(
-        #             base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
-        #             lora_path=lora_path,
-        #             outputs_dir=f"results/{dataset}",
-        #             prompts=[(concept_prompt + " " + p).replace(to_replace, replacement) for p in validation_prompts],
-        #             num_images=10,
-        #             num_inference_steps=30,
-        #         )
-        #     except Exception as e:
-        #         print(f"Inference error {e}")
-        #         traceback.print_exc()
+        try:
+            print(args)
+            train(args)
+        except Exception as e:
+            print(f"Train error: {e}")
+            traceback.print_exc()
+
+        for checkpoint in ["checkpoint-1500"]:
+            lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
+            try:
+                generate_lora_sdxl_images(
+                    base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
+                    lora_path=lora_path,
+                    outputs_dir=str(result_dir / dataset),
+                    prompts=[(concept_prompt + " " + p).replace(to_replace, replacement) for p in validation_prompts],
+                    num_images=10,
+                    num_inference_steps=30,
+                )
+            except Exception as e:
+                print(f"Inference error {e}")
+                traceback.print_exc()
 
     html = f"<h1>{dataset}</h1>"
 
@@ -92,9 +91,10 @@ for test in tests:
         for replacement in replacements:
             p = (concept_prompt + " " + prompt).replace(to_replace, replacement)
             html += "<p>" + p + "</p>"
-            gridimage_path = (str(p[:100]) + ".png")
+            gridimage_path = dataset + "/" + (str(p[:100]).replace(".", "") + ".png")
             html += f"<img src='{gridimage_path}' width='100%'/><br/>"
 
     with open(result_dir / f"{dataset}.html", "w") as f:
         f.write(html)
 
+#  aws s3 cp --recursive results s3://dev-ml-phoenix-test-reports-bucket83908e77-1reu5qi5chdwa/training/2023-12-08-tokens-variation/results
