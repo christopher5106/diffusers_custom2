@@ -1106,6 +1106,8 @@ def main(args):
 
     # Optimization parameters
     unet_lora_parameters_with_lr = {"params": unet_lora_parameters, "lr": args.learning_rate}
+    params_to_optimize = [unet_lora_parameters_with_lr]
+
     if args.train_text_encoder:
         # different learning rate for text encoder and unet
         text_lora_parameters_one_with_lr = {
@@ -1118,13 +1120,9 @@ def main(args):
             "weight_decay": args.adam_weight_decay_text_encoder,
             "lr": args.text_encoder_lr if args.text_encoder_lr else args.learning_rate,
         }
-        params_to_optimize = [
-            unet_lora_parameters_with_lr,
-            text_lora_parameters_one_with_lr,
-            text_lora_parameters_two_with_lr,
-        ]
-    else:
-        params_to_optimize = [unet_lora_parameters_with_lr]
+        params_to_optimize.append(text_lora_parameters_one_with_lr)
+        params_to_optimize.append(text_lora_parameters_two_with_lr)
+
 
     # Optimizer creation
     if not (args.optimizer.lower() == "prodigy" or args.optimizer.lower() == "adamw"):

@@ -102,7 +102,7 @@ def generate_lora_sdxl_images(
             generated_images.append(image)
 
         image = image_grid(generated_images, 2, math.ceil(len(generated_images) / 2))
-        filename = outputs_dir / (str(prompt[:100]) + ".png")
+        filename = outputs_dir / (str(prompt[:100]).replace(".", "") + ".png")
         image.save(filename)
         logger.info(f"Saving image to {filename}")
 

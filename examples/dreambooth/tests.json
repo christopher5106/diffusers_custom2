@@ -106,7 +106,7 @@
       "sword wrapped in a royal banner.",
       "sword being forged by a blacksmith."
     ],
-    "to_replace": ["sword"],
+    "to_replace": "sword",
     "replacements": [
       "sword",
       "pnkdmnd",
