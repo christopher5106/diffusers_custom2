@@ -17,6 +17,7 @@ result_dir.mkdir(exist_ok=True)
 
 html = f"<h1>Train test results</h1><ul>"
 for test in tests:
+    dataset = test["dataset_name"]
     html += f"<i><a href='{dataset}.html'>{dataset}</a></li>"
 html += "</ul>"
 with open(result_dir / f"index.html", "w") as f:
