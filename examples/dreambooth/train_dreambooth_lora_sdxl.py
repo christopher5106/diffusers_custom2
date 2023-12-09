@@ -804,7 +804,7 @@ def tokenize_prompt(tokenizer, prompt):
 
 
 # Adapted from pipelines.StableDiffusionXLPipeline.encode_prompt
-def encode_prompt(text_encoders, tokenizers, prompt, text_input_ids_list=None, special_token = False):
+def encode_prompt(text_encoders, tokenizers, prompt, text_input_ids_list=None, special_token=False):
     prompt_embeds_list = []
 
     for i, text_encoder in enumerate(text_encoders):
@@ -815,9 +815,14 @@ def encode_prompt(text_encoders, tokenizers, prompt, text_input_ids_list=None, s
             assert text_input_ids_list is not None
             text_input_ids = text_input_ids_list[i]
 
-        # if special_token:
-        #     text_input_ids
-        print("text_nput_ids shape", text_input_ids.shape)
+        if special_token:
+            text_input_ids = torch.cat( # (bs, seq)
+                [
+                    torch.zeros((1, 1)),
+                    text_input_ids,
+                ], dim=1
+            )
+
         prompt_embeds = text_encoder(
             text_input_ids.to(text_encoder.device),
             output_hidden_states=True,
@@ -1277,7 +1282,8 @@ def main(args):
 
         def compute_text_embeddings(prompt, text_encoders, tokenizers):
             with torch.no_grad():
-                prompt_embeds, pooled_prompt_embeds = encode_prompt(text_encoders, tokenizers, prompt)
+                prompt_embeds, pooled_prompt_embeds = encode_prompt(text_encoders, tokenizers, prompt,
+                                                                    special_token=args.train_token)
                 prompt_embeds = prompt_embeds.to(accelerator.device)
                 pooled_prompt_embeds = pooled_prompt_embeds.to(accelerator.device)
             return prompt_embeds, pooled_prompt_embeds
@@ -1492,6 +1498,7 @@ def main(args):
                         tokenizers=None,
                         prompt=None,
                         text_input_ids_list=[tokens_one, tokens_two],
+                        special_token=args.train_token
                     )
                     unet_added_conditions.update(
                         {"text_embeds": pooled_prompt_embeds.repeat(elems_to_repeat_text_embeds, 1)}
