@@ -11,7 +11,7 @@ with open("tests.json", "r") as f:
     tests = json.load(f)
 
 rank = 4
-num_steps = 10
+num_steps = 10 # TODO 1500
 
 result_dir = Path("results")
 result_dir.mkdir(exist_ok=True)
@@ -50,7 +50,7 @@ for test in tests:
             "--pretrained_vae_model_name_or_path", "madebyollin/sdxl-vae-fp16-fix",
             "--mixed_precision", "fp16",
             "--validation_prompt", "daiton",
-            "--report_to", "wandb"
+            # "--report_to", "wandb"
         ])
 
         try:
