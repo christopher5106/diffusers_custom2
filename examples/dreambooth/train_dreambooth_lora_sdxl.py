@@ -966,8 +966,10 @@ def main(args):
     )
 
     if args.train_token:
-        text_encoder_one.text_model.embeddings = CLIPTextEmbeddingsSpecialToken(text_encoder_one.text_model.embeddings)
-        text_encoder_two.text_model.embeddings = CLIPTextEmbeddingsSpecialToken(text_encoder_two.text_model.embeddings)
+        special_embeddings_one = CLIPTextEmbeddingsSpecialToken(text_encoder_one.text_model.embeddings)
+        special_embeddings_two = CLIPTextEmbeddingsSpecialToken(text_encoder_two.text_model.embeddings)
+        text_encoder_one.text_model.embeddings = special_embeddings_one
+        text_encoder_two.text_model.embeddings = special_embeddings_two
 
 
     vae_path = (
@@ -1024,7 +1026,7 @@ def main(args):
 
     if args.gradient_checkpointing:
         unet.enable_gradient_checkpointing()
-        if args.train_text_encoder:
+        if args.train_text_encoder or args.train_token:
             text_encoder_one.gradient_checkpointing_enable()
             text_encoder_two.gradient_checkpointing_enable()
 
@@ -1169,6 +1171,9 @@ def main(args):
         params_to_optimize.append(text_lora_parameters_one_with_lr)
         params_to_optimize.append(text_lora_parameters_two_with_lr)
 
+    if args.train_token:
+        pass
+        # TODO christohper!!!
 
     # Optimizer creation
     if not (args.optimizer.lower() == "prodigy" or args.optimizer.lower() == "adamw"):
@@ -1227,6 +1232,10 @@ def main(args):
             params_to_optimize[1]["lr"] = args.learning_rate
             params_to_optimize[2]["lr"] = args.learning_rate
 
+        if args.train_token:
+            pass
+            # TODO christopher !!
+
         optimizer = optimizer_class(
             params_to_optimize,
             lr=args.learning_rate,
@@ -1277,7 +1286,7 @@ def main(args):
         add_time_ids = add_time_ids.to(accelerator.device, dtype=weight_dtype)
         return add_time_ids
 
-    if not args.train_text_encoder:
+    if not args.train_text_encoder and not args.train_token:
         tokenizers = [tokenizer_one, tokenizer_two]
         text_encoders = [text_encoder_one, text_encoder_two]
 
@@ -1295,7 +1304,7 @@ def main(args):
     # If no type of tuning is done on the text_encoder and custom instance prompts are NOT
     # provided (i.e. the --instance_prompt is used for all images), we encode the instance prompt once to avoid
     # the redundant encoding.
-    if not args.train_text_encoder and not train_dataset.custom_instance_prompts:
+    if not args.train_text_encoder and not args.train_token and not train_dataset.custom_instance_prompts:
         instance_prompt_hidden_states, instance_pooled_prompt_embeds = compute_text_embeddings(
             args.instance_prompt, text_encoders, tokenizers
         )
@@ -1309,7 +1318,7 @@ def main(args):
             )
 
     # Clear the memory here
-    if not args.train_text_encoder and not train_dataset.custom_instance_prompts:
+    if not args.train_text_encoder and not args.train_token and not train_dataset.custom_instance_prompts:
         del tokenizers, text_encoders
         gc.collect()
         torch.cuda.empty_cache()
@@ -1322,7 +1331,7 @@ def main(args):
         add_time_ids = torch.cat([add_time_ids, class_time_ids], dim=0)
 
     if not train_dataset.custom_instance_prompts:
-        if not args.train_text_encoder:
+        if not args.train_text_encoder and not args.train_token:
             prompt_embeds = instance_prompt_hidden_states
             unet_add_text_embeds = instance_pooled_prompt_embeds
             if args.with_prior_preservation:
@@ -1356,7 +1365,7 @@ def main(args):
     )
 
     # Prepare everything with our `accelerator`.
-    if args.train_text_encoder:
+    if args.train_text_encoder or args.train_token:
         unet, text_encoder_one, text_encoder_two, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
             unet, text_encoder_one, text_encoder_two, optimizer, train_dataloader, lr_scheduler
         )
@@ -1436,6 +1445,13 @@ def main(args):
             # set top parameter requires_grad = True for gradient checkpointing works
             text_encoder_one.text_model.embeddings.requires_grad_(True)
             text_encoder_two.text_model.embeddings.requires_grad_(True)
+            if args.train_token:
+                text_encoder_one.text_model.embeddings.subnet.requires_grad_(True)
+                text_encoder_two.text_model.embeddings.subnet.requires_grad_(True)
+
+        if args.train_token:
+            text_encoder_one.text_model.embeddings.requires_grad_(True)
+            text_encoder_two.text_model.embeddings.requires_grad_(True)
 
         for step, batch in enumerate(train_dataloader):
             with accelerator.accumulate(unet):
@@ -1444,7 +1460,7 @@ def main(args):
 
                 # encode batch prompts when custom prompts are provided for each image -
                 if train_dataset.custom_instance_prompts:
-                    if not args.train_text_encoder:
+                    if not args.train_text_encoder and not args.train_token:
                         prompt_embeds, unet_add_text_embeds = compute_text_embeddings(
                             prompts, text_encoders, tokenizers
                         )
@@ -1480,7 +1496,7 @@ def main(args):
                     elems_to_repeat_time_ids = bsz // 2 if args.with_prior_preservation else bsz
 
                 # Predict the noise residual
-                if not args.train_text_encoder:
+                if not args.train_text_encoder and not args.train_token:
                     unet_added_conditions = {
                         "time_ids": add_time_ids.repeat(elems_to_repeat_time_ids, 1),
                         "text_embeds": unet_add_text_embeds.repeat(elems_to_repeat_text_embeds, 1),
@@ -1608,7 +1624,7 @@ def main(args):
                     f" {args.validation_prompt}."
                 )
                 # create pipeline
-                if not args.train_text_encoder:
+                if not args.train_text_encoder and not args.train_token:
                     text_encoder_one = text_encoder_cls_one.from_pretrained(
                         args.pretrained_model_name_or_path,
                         subfolder="text_encoder",
@@ -1684,8 +1700,8 @@ def main(args):
         unet = unet.to(torch.float32)
         unet_lora_layers = unet_lora_state_dict(unet)
 
-        if args.train_text_encoder:
-            text_encoder_one = accelerator.unwrap_model(text_encoder_one)
+        if args.train_text_encoder or args.train_token:
+            text_encoder_one = accelerator.unwrap_model(text_encoder_one) # TODO christopher!!!
             text_encoder_lora_layers = text_encoder_lora_state_dict(text_encoder_one.to(torch.float32))
             text_encoder_two = accelerator.unwrap_model(text_encoder_two)
             text_encoder_2_lora_layers = text_encoder_lora_state_dict(text_encoder_two.to(torch.float32))
