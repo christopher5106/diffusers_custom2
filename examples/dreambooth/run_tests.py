@@ -74,7 +74,7 @@ for test in tests:
                     base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
                     lora_path=lora_path,
                     outputs_dir=str(result_dir / dataset),
-                    prompts=[(concept_prompt + " " + p).replace(to_replace, replacement) for p in validation_prompts],
+                    prompts=[(concept_prompt + " " + p).lower().replace(to_replace, replacement) for p in validation_prompts],
                     num_images=10,
                     num_inference_steps=30,
                 )
@@ -89,7 +89,7 @@ for test in tests:
         html += f"<h4>{prompt}</h4>"
 
         for replacement in replacements:
-            p = (concept_prompt + " " + prompt).replace(to_replace, replacement)
+            p = (concept_prompt + " " + prompt).lower().replace(to_replace, replacement)
             html += "<p>" + p + "</p>"
             gridimage_path = dataset + "/" + (str(p[:100]).replace(".", "") + ".png")
             html += f"<img src='{gridimage_path}' width='100%'/><br/>"
