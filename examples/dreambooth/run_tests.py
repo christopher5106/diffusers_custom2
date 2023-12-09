@@ -53,7 +53,7 @@ for test in tests:
         ])
 
         try:
-            print(args)
+            # print(args)
             train(args)
         except Exception as e:
             print(f"Train error: {e}")
