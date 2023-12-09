@@ -974,10 +974,9 @@ def main(args):
     )
 
     if args.train_token:
-        text_encoder_one.text_model.embeddings = CLIPTextEmbeddingsSpecialToken(text_encoder_one.text_model.embeddings)
-        text_encoder_two.text_model.embeddings = CLIPTextEmbeddingsSpecialToken(text_encoder_two.text_model.embeddings)
-        text_encoder_one.text_model.embeddings.to(accelerator.device)
-        text_encoder_two.text_model.embeddings.to(accelerator.device)
+        text_encoder_one.text_model.embeddings = CLIPTextEmbeddingsSpecialToken(text_encoder_one.text_model.embeddings).to("cuda")
+        text_encoder_two.text_model.embeddings = CLIPTextEmbeddingsSpecialToken(text_encoder_two.text_model.embeddings).to("cuda")
+
 
     vae_path = (
         args.pretrained_model_name_or_path
