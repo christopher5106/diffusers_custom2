@@ -357,6 +357,11 @@ def parse_args(input_args=None):
         help="Whether to train the text encoder. If set, the text encoder should be float32 precision.",
     )
     parser.add_argument(
+        "--train_token",
+        action="store_true",
+        help="Whether to train a token.",
+    )
+    parser.add_argument(
         "--train_batch_size", type=int, default=4, help="Batch size (per device) for the training dataloader."
     )
     parser.add_argument(
@@ -595,6 +600,9 @@ def parse_args(input_args=None):
         args = parser.parse_args()
 
     print(args)
+    print("forcing train_token to true")
+    args.train_token = True
+
     if args.dataset_name is None and args.instance_data_dir is None:
         raise ValueError("Specify either `--dataset_name` or `--instance_data_dir`")
 
@@ -911,13 +919,16 @@ def main(args):
     # import correct text encoder classes
     text_encoder_cls_one = import_model_class_from_model_name_or_path(
         args.pretrained_model_name_or_path, args.revision
-    )
-    print("text encoder 1 class: ", text_encoder_cls_one)
+    ) # transformers.models.clip.modeling_clip.CLIPTextModel
 
     text_encoder_cls_two = import_model_class_from_model_name_or_path(
         args.pretrained_model_name_or_path, args.revision, subfolder="text_encoder_2"
-    )
-    print("text encoder 2 class: ", text_encoder_cls_two)
+    ) # transformers.models.clip.modeling_clip.CLIPTextModelWithProjection
+
+    if args.train_token:
+        from .modeling_clip import CLIPTextModel, CLIPTextModelWithProjection
+        text_encoder_cls_one = CLIPTextModel
+        text_encoder_cls_two = CLIPTextModelWithProjection
 
     # Load scheduler and models
     noise_scheduler = DDPMScheduler.from_pretrained(args.pretrained_model_name_or_path, subfolder="scheduler")
@@ -927,6 +938,7 @@ def main(args):
     text_encoder_two = text_encoder_cls_two.from_pretrained(
         args.pretrained_model_name_or_path, subfolder="text_encoder_2", revision=args.revision, variant=args.variant
     )
+
     vae_path = (
         args.pretrained_model_name_or_path
         if args.pretrained_vae_model_name_or_path is None
