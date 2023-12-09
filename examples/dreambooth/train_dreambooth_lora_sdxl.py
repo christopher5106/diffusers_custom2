@@ -70,21 +70,8 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
     def __init__(self, CLIPTextEmbeddings):
         super().__init__()
         self.subnet = CLIPTextEmbeddings
-        embed_dim = self.subnet.token_embedding.embedding_dim
+        embed_dim = self.subnet.token_embedding.embedding_dim # 768, 1280 (for each encoder)
         self.special_token_embedding = torch.nn.Parameter(torch.zeros(1, 1, embed_dim))
-
-        # embed_dim = config.hidden_size
-
-        # self.token_embedding = CLIPTextEmbeddings.token_embedding # nn.Embedding(config.vocab_size, embed_dim)
-        # self.position_embedding = CLIPTextEmbeddings.position_embedding # nn.Embedding(config.max_position_embeddings, embed_dim)
-        # self.position_ids = CLIPTextEmbeddings.position_ids
-
-        # # position_ids (1, len position emb) is contiguous in memory and exported when serialized
-        # self.register_buffer(
-        #     "position_ids",
-        #     torch.arange(config.max_position_embeddings).expand((1, -1)),
-        #     persistent=False
-        # )
 
     def forward(
         self,
@@ -93,26 +80,10 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
         inputs_embeds: Optional[torch.FloatTensor] = None,
     ) -> torch.Tensor:
 
-        # embeddings =
-        # torch.Size([1, 77, 768])
-        # torch.Size([1, 77, 1280])
-
         embeddings = torch.cat([
             self.special_token_embedding.repeat(1, 1, 1),
-            self.subnet(input_ids, position_ids, inputs_embeds)
+            self.subnet(input_ids, position_ids, inputs_embeds) # (batch size, position, emb_size)
         ], dim=1)
-
-        # seq_length = input_ids.shape[-1] if input_ids is not None else inputs_embeds.shape[-2]
-        #
-        # if position_ids is None:
-        #     position_ids = self.position_ids[:, :seq_length]
-        #
-        # if inputs_embeds is None:
-        #     inputs_embeds = self.token_embedding(input_ids)
-        #
-        # position_embeddings = self.position_embedding(position_ids)
-        # embeddings = inputs_embeds + position_embeddings
-
         return embeddings
 
 
@@ -653,8 +624,6 @@ def parse_args(input_args=None):
         args = parser.parse_args()
 
     print(args)
-    print("forcing train_token to true")
-    args.train_token = True
 
     if args.dataset_name is None and args.instance_data_dir is None:
         raise ValueError("Specify either `--dataset_name` or `--instance_data_dir`")
@@ -835,7 +804,7 @@ def tokenize_prompt(tokenizer, prompt):
 
 
 # Adapted from pipelines.StableDiffusionXLPipeline.encode_prompt
-def encode_prompt(text_encoders, tokenizers, prompt, text_input_ids_list=None):
+def encode_prompt(text_encoders, tokenizers, prompt, text_input_ids_list=None, special_token = False):
     prompt_embeds_list = []
 
     for i, text_encoder in enumerate(text_encoders):
@@ -846,6 +815,9 @@ def encode_prompt(text_encoders, tokenizers, prompt, text_input_ids_list=None):
             assert text_input_ids_list is not None
             text_input_ids = text_input_ids_list[i]
 
+        # if special_token:
+        #     text_input_ids
+        print("text_nput_ids shape", text_input_ids.shape)
         prompt_embeds = text_encoder(
             text_input_ids.to(text_encoder.device),
             output_hidden_states=True,
