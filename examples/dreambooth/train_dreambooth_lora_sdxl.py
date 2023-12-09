@@ -70,7 +70,7 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
     def __init__(self, CLIPTextEmbeddings):
         super().__init__()
         self.subnet = CLIPTextEmbeddings
-        embed_dim = self.subnet.embedding_dim
+        embed_dim = self.subnet.token_embedding.embedding_dim
         self.token_embedding = nn.Embedding(1, embed_dim)
 
         # embed_dim = config.hidden_size
