@@ -912,9 +912,12 @@ def main(args):
     text_encoder_cls_one = import_model_class_from_model_name_or_path(
         args.pretrained_model_name_or_path, args.revision
     )
+    print("text encoder 1 class: ", text_encoder_cls_one)
+
     text_encoder_cls_two = import_model_class_from_model_name_or_path(
         args.pretrained_model_name_or_path, args.revision, subfolder="text_encoder_2"
     )
+    print("text encoder 2 class: ", text_encoder_cls_two)
 
     # Load scheduler and models
     noise_scheduler = DDPMScheduler.from_pretrained(args.pretrained_model_name_or_path, subfolder="scheduler")
