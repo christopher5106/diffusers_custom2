@@ -80,10 +80,11 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
         inputs_embeds: Optional[torch.FloatTensor] = None,
     ) -> torch.Tensor:
 
-        assert inputs_embeds is None  # TODO has been not sliced because it's mainly none
+        assert position_ids is None
+        assert inputs_embeds is None  # TODO has been not sliced because it's mainly None
         embeddings = torch.cat([
             self.special_token_embedding.repeat(1, 1, 1),
-            self.subnet(input_ids[1:], position_ids[1:], inputs_embeds)  # (batch size, position, emb_size)
+            self.subnet(input_ids[1:], position_ids, inputs_embeds)  # (batch size, position, emb_size)
         ], dim=1)
         return embeddings
 

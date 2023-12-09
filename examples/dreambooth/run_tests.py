@@ -61,6 +61,7 @@ for test in tests:
             print(f"Train error: {e}")
             traceback.print_exc()
 
+        exit()
         for checkpoint in [f""]: # checkpoint-500
             lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
             try:
