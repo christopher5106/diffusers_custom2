@@ -64,9 +64,23 @@ check_min_version("0.24.0.dev0")
 
 logger = get_logger(__name__)
 
-class CLIPTextEmbeddingsSpecial:
-    def __init__(self, text_model):
-        self.text_model = text_model
+from torch import nn
+from typing import Optional
+class CLIPTextEmbeddingsSpecialToken(nn.Module):
+    def __init__(self, CLIPTextEmbeddings):
+        super().__init__()
+        embed_dim = config.hidden_size
+
+        self.token_embedding = CLIPTextEmbeddings.token_embedding # nn.Embedding(config.vocab_size, embed_dim)
+        self.position_embedding = CLIPTextEmbeddings.position_embedding # nn.Embedding(config.max_position_embeddings, embed_dim)
+        self.position_ids = CLIPTextEmbeddings.position_ids
+
+        # # position_ids (1, len position emb) is contiguous in memory and exported when serialized
+        # self.register_buffer(
+        #     "position_ids",
+        #     torch.arange(config.max_position_embeddings).expand((1, -1)),
+        #     persistent=False
+        # )
 
     def forward(
         self,
@@ -74,18 +88,16 @@ class CLIPTextEmbeddingsSpecial:
         position_ids: Optional[torch.LongTensor] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
     ) -> torch.Tensor:
-        embeddings = self.text_model.forward(input_ids, position_ids, inputs_embeds)
+        seq_length = input_ids.shape[-1] if input_ids is not None else inputs_embeds.shape[-2]
 
-        # seq_length = input_ids.shape[-1] if input_ids is not None else inputs_embeds.shape[-2]
-        #
-        # if position_ids is None:
-        #     position_ids = self.position_ids[:, :seq_length]
-        #
-        # if inputs_embeds is None:
-        #     inputs_embeds = self.token_embedding(input_ids)
-        #
-        # position_embeddings = self.position_embedding(position_ids)
-        # embeddings = inputs_embeds + position_embeddings
+        if position_ids is None:
+            position_ids = self.position_ids[:, :seq_length]
+
+        if inputs_embeds is None:
+            inputs_embeds = self.token_embedding(input_ids)
+
+        position_embeddings = self.position_embedding(position_ids)
+        embeddings = inputs_embeds + position_embeddings
 
         return embeddings
 
@@ -962,8 +974,8 @@ def main(args):
     )
 
     if args.train_token:
-        text_encoder_one = CLIPTextEmbeddingsSpecial(text_encoder_one)
-        text_encoder_two = CLIPTextEmbeddingsSpecial(text_encoder_two)
+        text_encoder_one = CLIPTextEmbeddingsSpecialToken(text_encoder_one)
+        text_encoder_two = CLIPTextEmbeddingsSpecialToken(text_encoder_two)
 
     vae_path = (
         args.pretrained_model_name_or_path
