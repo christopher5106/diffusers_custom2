@@ -71,7 +71,7 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
         super().__init__()
         self.subnet = CLIPTextEmbeddings
         embed_dim = self.subnet.token_embedding.embedding_dim
-        self.token_embedding = nn.Embedding(1, embed_dim)
+        self.special_token_embedding = torch.nn.Parameter(torch.zeros(1, 1, embed_dim))
 
         # embed_dim = config.hidden_size
 
@@ -93,8 +93,15 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
         inputs_embeds: Optional[torch.FloatTensor] = None,
     ) -> torch.Tensor:
 
-        embeddings = self.subnet(input_ids, position_ids, inputs_embeds)
-        print(embeddings.shape)
+        # embeddings =
+        # torch.Size([1, 77, 768])
+        # torch.Size([1, 77, 1280])
+
+        embeddings = torch.cat([
+            self.special_token_embedding.repeat(1, 1, 1),
+            self.subnet(input_ids, position_ids, inputs_embeds)
+        ], dim=1)
+
         # seq_length = input_ids.shape[-1] if input_ids is not None else inputs_embeds.shape[-2]
         #
         # if position_ids is None:
