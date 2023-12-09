@@ -82,8 +82,8 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
 
         embeddings = torch.cat([
             self.special_token_embedding.repeat(1, 1, 1),
-            self.subnet(input_ids, position_ids, inputs_embeds) # (batch size, position, emb_size)
-        ], dim=1)
+            self.subnet(input_ids[1:], position_ids[1:], inputs_embeds[1:])  # (batch size, position, emb_size)
+        ], dim=1) # TODO check if for embeds it's working to take from 1
         return embeddings
 
 
@@ -816,9 +816,8 @@ def encode_prompt(text_encoders, tokenizers, prompt, text_input_ids_list=None, s
             text_input_ids = text_input_ids_list[i]
 
         if special_token:
-            text_input_ids = torch.cat( # (bs, seq)
-                [
-                    torch.zeros((1, 1)),
+            text_input_ids = torch.cat([  # (bs, seq)
+                    torch.zeros((1, 1)).long(),
                     text_input_ids,
                 ], dim=1
             )
