@@ -15,14 +15,6 @@ rank = 4
 result_dir = Path("results")
 result_dir.mkdir(exist_ok=True)
 
-html = f"<h1>Train test results</h1><ul>"
-for test in tests:
-    dataset = test["dataset_name"]
-    html += f"<li><a href='{dataset}.html'>{dataset}</a></li>"
-html += "</ul>"
-with open(result_dir / f"index.html", "w") as f:
-    f.write(html)
-
 for test in tests:
 
     dataset = test["dataset_name"]
@@ -96,5 +88,14 @@ for test in tests:
 
     with open(result_dir / f"{dataset}.html", "w") as f:
         f.write(html)
+
+
+html = f"<h1>Train test results</h1><ul>"
+for test in tests:
+    dataset = test["dataset_name"]
+    html += f"<li><a href='{dataset}.html'>{dataset}</a></li>"
+html += "</ul>"
+with open(result_dir / f"index.html", "w") as f:
+    f.write(html)
 
 #  aws s3 cp --recursive results s3://dev-ml-phoenix-test-reports-bucket83908e77-1reu5qi5chdwa/training/2023-12-08-tokens-variation/results
