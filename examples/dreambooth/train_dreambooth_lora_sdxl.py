@@ -63,7 +63,7 @@ check_min_version("0.24.0.dev0")
 
 logger = get_logger(__name__)
 
-from transformers.models.clip.model_clip import CLIPTextEmbeddings
+from transformers.models import CLIPTextEmbeddings
 
 class CLIPTextEmbeddingsSpecial:
     def __init__(self, text_model: CLIPTextEmbeddings):
