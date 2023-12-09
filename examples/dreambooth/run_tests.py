@@ -40,7 +40,7 @@ for test in tests:
             "--resolution", "1024",
             "--rank", str(rank),
             "--train_text_encoder",
-            # "--train_token",
+            "--train_token",
             "--train_batch_size", "1",
             "--gradient_accumulation_steps", "1",
             "--learning_rate", "1e-4",
