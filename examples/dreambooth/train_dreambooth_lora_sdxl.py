@@ -926,7 +926,7 @@ def main(args):
     ) # transformers.models.clip.modeling_clip.CLIPTextModelWithProjection
 
     if args.train_token:
-        from .modeling_clip import CLIPTextModel, CLIPTextModelWithProjection
+        from modeling_clip import CLIPTextModel, CLIPTextModelWithProjection
         text_encoder_cls_one = CLIPTextModel
         text_encoder_cls_two = CLIPTextModelWithProjection
 
