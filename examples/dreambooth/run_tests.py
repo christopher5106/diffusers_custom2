@@ -10,7 +10,7 @@ from predict import generate_lora_sdxl_images
 with open("tests.json", "r") as f:
     tests = json.load(f)
 
-rank = 4
+rank = 64
 num_steps = 10 # TODO 1500
 
 result_dir = Path("results")

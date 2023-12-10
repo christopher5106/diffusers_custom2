@@ -67,11 +67,13 @@ logger = get_logger(__name__)
 from torch import nn
 from typing import Optional
 class CLIPTextEmbeddingsSpecialToken(nn.Module):
-    def __init__(self, CLIPTextEmbeddings):
+    def __init__(self, clip_text_embeddings):
         super().__init__()
-        self.subnet = CLIPTextEmbeddings
-        embed_dim = self.subnet.token_embedding.embedding_dim # 768, 1280 (for each encoder)
-        self.special_token_embedding = torch.nn.Parameter(torch.zeros((1, 1, embed_dim), dtype=torch.float32))
+        self.subnet = clip_text_embeddings
+        embed_dim = self.subnet.token_embedding.embedding_dim  # 768, 1280 (for each encoder)
+        self.special_token_embedding = torch.nn.Parameter(
+            torch.zeros((1, 1, embed_dim), dtype=torch.float32)
+        )
 
     def forward(
         self,
@@ -83,14 +85,14 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
         assert position_ids is None
         assert inputs_embeds is None  # TODO has been not sliced because it's mainly None
         embeddings = torch.cat([
-            self.special_token_embedding.repeat(1, 1, 1),
+            self.special_token_embedding.repeat(1, 1, 1), # TODO repeat with correct batch size instead of 1
             self.subnet(input_ids[:, 1:], position_ids, inputs_embeds)  # (batch size, position, emb_size)
         ], dim=1)
         return embeddings
 
 
 # TODO: This function should be removed once training scripts are rewritten in PEFT
-def text_encoder_lora_state_dict(text_encoder):
+def text_encoder_lora_state_dict(text_encoder, train_special_token):
     state_dict = {}
 
     def text_encoder_attn_modules(text_encoder):
@@ -118,6 +120,15 @@ def text_encoder_lora_state_dict(text_encoder):
 
         for k, v in module.out_proj.lora_linear_layer.state_dict().items():
             state_dict[f"{name}.out_proj.lora_linear_layer.{k}"] = v
+
+    if train_special_token:
+        print("Special token clip text model's state_dict:")
+        net = text_encoder.text_model.embeddings
+        for param_tensor in net.state_dict():
+            print(param_tensor, "\t", net.state_dict()[param_tensor].size())
+
+        print()
+        # state_dict[""] = text_encoder.text_model.embeddings
 
     return state_dict
 
@@ -1102,9 +1113,9 @@ def main(args):
                 if isinstance(model, type(accelerator.unwrap_model(unet))):
                     unet_lora_layers_to_save = unet_lora_state_dict(model)
                 elif isinstance(model, type(accelerator.unwrap_model(text_encoder_one))):
-                    text_encoder_one_lora_layers_to_save = text_encoder_lora_state_dict(model)
+                    text_encoder_one_lora_layers_to_save = text_encoder_lora_state_dict(model, args.train_token)
                 elif isinstance(model, type(accelerator.unwrap_model(text_encoder_two))):
-                    text_encoder_two_lora_layers_to_save = text_encoder_lora_state_dict(model)
+                    text_encoder_two_lora_layers_to_save = text_encoder_lora_state_dict(model, args.train_token)
                 else:
                     raise ValueError(f"unexpected save model: {model.__class__}")
 
@@ -1720,9 +1731,9 @@ def main(args):
 
         if args.train_text_encoder or args.train_token:
             text_encoder_one = accelerator.unwrap_model(text_encoder_one) # TODO christopher!!!
-            text_encoder_lora_layers = text_encoder_lora_state_dict(text_encoder_one.to(torch.float32))
+            text_encoder_lora_layers = text_encoder_lora_state_dict(text_encoder_one.to(torch.float32), args.train_token)
             text_encoder_two = accelerator.unwrap_model(text_encoder_two)
-            text_encoder_2_lora_layers = text_encoder_lora_state_dict(text_encoder_two.to(torch.float32))
+            text_encoder_2_lora_layers = text_encoder_lora_state_dict(text_encoder_two.to(torch.float32), args.train_token)
         else:
             text_encoder_lora_layers = None
             text_encoder_2_lora_layers = None
