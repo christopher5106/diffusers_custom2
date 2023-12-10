@@ -91,6 +91,12 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
         return embeddings
 
 
+def add_special_token(text_encoder):
+    special_embeddings = CLIPTextEmbeddingsSpecialToken(text_encoder.text_model.embeddings)
+    text_encoder.text_model.embeddings = special_embeddings
+    return [special_embeddings.special_token_embedding]
+
+
 # TODO: This function should be removed once training scripts are rewritten in PEFT
 def text_encoder_lora_state_dict(text_encoder, train_special_token):
     state_dict = {}
@@ -1088,12 +1094,8 @@ def main(args):
         )
 
     if args.train_token:
-        special_embeddings_one = CLIPTextEmbeddingsSpecialToken(text_encoder_one.text_model.embeddings)
-        text_specialtoken_parameters_one = [special_embeddings_one.special_token_embedding]
-        special_embeddings_two = CLIPTextEmbeddingsSpecialToken(text_encoder_two.text_model.embeddings)
-        text_specialtoken_parameters_two = [special_embeddings_two.special_token_embedding]
-        text_encoder_one.text_model.embeddings = special_embeddings_one
-        text_encoder_two.text_model.embeddings = special_embeddings_two
+        text_specialtoken_parameters_one = add_special_token(text_encoder_one)
+        text_specialtoken_parameters_two = add_special_token(text_encoder_two)
 
     # create custom saving & loading hooks so that `accelerator.save_state(...)` serializes in a nice format
     def save_model_hook(models, weights, output_dir):

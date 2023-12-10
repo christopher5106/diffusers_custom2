@@ -70,13 +70,14 @@ def generate_lora_sdxl_images(
     # print(model.lora_state_dict(lora_path))
     state_dict, network_alphas = model.lora_state_dict(lora_path)
 
+    # load special token
+    from train_dreambooth_lora_sdxl import add_special_token
+    text_specialtoken_parameters_one = add_special_token(model.text_encoder)
+    text_specialtoken_parameters_two = add_special_token(model.text_encoder_2)
+    text_specialtoken_parameters_one[0].copy_(state_dict["text_encoder.special_token_embedding"])
+    text_specialtoken_parameters_two[0].copy_(state_dict["text_encoder_2.special_token_embedding"])
     del state_dict["text_encoder.special_token_embedding"]
     del state_dict["text_encoder_2.special_token_embedding"]
-    # for param_tensor in state_dict:
-    #     print(param_tensor)
-
-    # for param_tensor in model.lora_state_dict(lora_path):
-    #     print(param_tensor, "\t", model.lora_state_dict(lora_path)[param_tensor].size())
 
     logger.info(f"Loading LORA weights from {lora_path}")
     model.load_lora_weights(
