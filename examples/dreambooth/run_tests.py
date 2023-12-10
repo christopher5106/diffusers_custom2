@@ -12,7 +12,7 @@ with open("tests.json", "r") as f:
     tests = json.load(f)
 
 rank = 64
-num_steps = 10  # TODO 1500
+num_steps = 1500
 
 result_dir = Path("results")
 result_dir.mkdir(exist_ok=True)
@@ -62,7 +62,6 @@ for test in tests:
             print(f"Train error: {e}")
             traceback.print_exc()
 
-        exit()
 
         for checkpoint in [f""]: # checkpoint-500
             lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
