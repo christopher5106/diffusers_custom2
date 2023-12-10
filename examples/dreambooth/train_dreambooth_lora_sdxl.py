@@ -71,7 +71,7 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
         super().__init__()
         self.subnet = CLIPTextEmbeddings
         embed_dim = self.subnet.token_embedding.embedding_dim # 768, 1280 (for each encoder)
-        self.special_token_embedding = torch.nn.Parameter(torch.zeros(1, 1, embed_dim))
+        self.special_token_embedding = torch.nn.Parameter(torch.zeros((1, 1, embed_dim)))
 
     def forward(
         self,
@@ -450,7 +450,7 @@ def parse_args(input_args=None):
         help="Text encoder learning rate to use.",
     )
     parser.add_argument(
-        "--specialtoken_lr",
+        "--text_specialtoken_lr",
         type=float,
         default=1e-4,
         help="Text encoder learning rate to use.",
@@ -529,7 +529,7 @@ def parse_args(input_args=None):
         "--adam_weight_decay_text_encoder", type=float, default=1e-03, help="Weight decay to use for text_encoder"
     )
     parser.add_argument(
-        "--adam_weight_decay_specialtoken", type=float, default=1e-04, help="Weight decay to use for text_encoder"
+        "--adam_weight_decay_text_specialtoken", type=float, default=1e-04, help="Weight decay to use for text_encoder"
     )
     parser.add_argument(
         "--adam_epsilon",
@@ -1184,14 +1184,14 @@ def main(args):
     if args.train_token:
         text_specialtoken_parameters_one_with_lr = {
             "params": text_specialtoken_parameters_one,
-            "weight_decay": args.adam_weight_decay_specialtoken,
-            "lr": args.specialtoken_lr if args.specialtoken_lr else args.learning_rate,
+            "weight_decay": args.adam_weight_decay_text_specialtoken,
+            "lr": args.text_specialtoken_lr if args.text_specialtoken_lr else args.learning_rate,
         }
         params_to_optimize.append(text_specialtoken_parameters_one_with_lr)
         text_specialtoken_parameters_two_with_lr = {
             "params": text_specialtoken_parameters_two,
-            "weight_decay": args.adam_weight_decay_specialtoken,
-            "lr": args.specialtoken_lr if args.specialtoken_lr else args.learning_rate,
+            "weight_decay": args.adam_weight_decay_text_specialtoken,
+            "lr": args.text_specialtoken_lr if args.text_specialtoken_lr else args.learning_rate,
         }
         params_to_optimize.append(text_specialtoken_parameters_two_with_lr)
 
