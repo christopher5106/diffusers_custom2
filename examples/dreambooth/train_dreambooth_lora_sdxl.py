@@ -71,7 +71,7 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
         super().__init__()
         self.subnet = CLIPTextEmbeddings
         embed_dim = self.subnet.token_embedding.embedding_dim # 768, 1280 (for each encoder)
-        self.special_token_embedding = torch.nn.Parameter(torch.zeros((1, 1, embed_dim), dtype=torch.float16))
+        self.special_token_embedding = torch.nn.Parameter(torch.zeros((1, 1, embed_dim), dtype=torch.float32))
 
     def forward(
         self,
@@ -973,15 +973,6 @@ def main(args):
         args.pretrained_model_name_or_path, subfolder="text_encoder_2", revision=args.revision, variant=args.variant
     )
 
-    if args.train_token:
-        special_embeddings_one = CLIPTextEmbeddingsSpecialToken(text_encoder_one.text_model.embeddings)
-        text_specialtoken_parameters_one = [special_embeddings_one.special_token_embedding]
-        special_embeddings_two = CLIPTextEmbeddingsSpecialToken(text_encoder_two.text_model.embeddings)
-        text_specialtoken_parameters_two = [special_embeddings_two.special_token_embedding]
-        text_encoder_one.text_model.embeddings = special_embeddings_one
-        text_encoder_two.text_model.embeddings = special_embeddings_two
-
-
     vae_path = (
         args.pretrained_model_name_or_path
         if args.pretrained_vae_model_name_or_path is None
@@ -1089,6 +1080,14 @@ def main(args):
         text_lora_parameters_two = LoraLoaderMixin._modify_text_encoder(
             text_encoder_two, dtype=torch.float32, rank=args.rank
         )
+
+    if args.train_token:
+        special_embeddings_one = CLIPTextEmbeddingsSpecialToken(text_encoder_one.text_model.embeddings)
+        text_specialtoken_parameters_one = [special_embeddings_one.special_token_embedding]
+        special_embeddings_two = CLIPTextEmbeddingsSpecialToken(text_encoder_two.text_model.embeddings)
+        text_specialtoken_parameters_two = [special_embeddings_two.special_token_embedding]
+        text_encoder_one.text_model.embeddings = special_embeddings_one
+        text_encoder_two.text_model.embeddings = special_embeddings_two
 
     # create custom saving & loading hooks so that `accelerator.save_state(...)` serializes in a nice format
     def save_model_hook(models, weights, output_dir):
