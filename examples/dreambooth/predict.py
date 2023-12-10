@@ -68,6 +68,9 @@ def generate_lora_sdxl_images(
         base_model_path,
     )
     print(model.lora_state_dict(lora_path))
+    for param_tensor in model.lora_state_dict(lora_path):
+        print(param_tensor)
+
     # for param_tensor in model.lora_state_dict(lora_path):
     #     print(param_tensor, "\t", model.lora_state_dict(lora_path)[param_tensor].size())
 
