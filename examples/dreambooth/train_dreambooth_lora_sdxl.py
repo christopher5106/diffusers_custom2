@@ -450,6 +450,12 @@ def parse_args(input_args=None):
         help="Text encoder learning rate to use.",
     )
     parser.add_argument(
+        "--specialtoken_lr",
+        type=float,
+        default=1e-4,
+        help="Text encoder learning rate to use.",
+    )
+    parser.add_argument(
         "--scale_lr",
         action="store_true",
         default=False,
@@ -522,7 +528,9 @@ def parse_args(input_args=None):
     parser.add_argument(
         "--adam_weight_decay_text_encoder", type=float, default=1e-03, help="Weight decay to use for text_encoder"
     )
-
+    parser.add_argument(
+        "--adam_weight_decay_specialtoken", type=float, default=1e-04, help="Weight decay to use for text_encoder"
+    )
     parser.add_argument(
         "--adam_epsilon",
         type=float,
@@ -967,7 +975,9 @@ def main(args):
 
     if args.train_token:
         special_embeddings_one = CLIPTextEmbeddingsSpecialToken(text_encoder_one.text_model.embeddings)
+        text_specialtoken_parameters_one = [special_embeddings_one.special_token_embedding]
         special_embeddings_two = CLIPTextEmbeddingsSpecialToken(text_encoder_two.text_model.embeddings)
+        text_specialtoken_parameters_two = [special_embeddings_two.special_token_embedding]
         text_encoder_one.text_model.embeddings = special_embeddings_one
         text_encoder_two.text_model.embeddings = special_embeddings_two
 
@@ -1172,8 +1182,18 @@ def main(args):
         params_to_optimize.append(text_lora_parameters_two_with_lr)
 
     if args.train_token:
-        pass
-        # TODO christohper!!!
+        text_specialtoken_parameters_one_with_lr = {
+            "params": text_specialtoken_parameters_one,
+            "weight_decay": args.adam_weight_decay_specialtoken,
+            "lr": args.specialtoken_lr if args.specialtoken_lr else args.learning_rate,
+        }
+        params_to_optimize.append(text_specialtoken_parameters_one_with_lr)
+        text_specialtoken_parameters_two_with_lr = {
+            "params": text_specialtoken_parameters_two,
+            "weight_decay": args.adam_weight_decay_specialtoken,
+            "lr": args.specialtoken_lr if args.specialtoken_lr else args.learning_rate,
+        }
+        params_to_optimize.append(text_specialtoken_parameters_two_with_lr)
 
     # Optimizer creation
     if not (args.optimizer.lower() == "prodigy" or args.optimizer.lower() == "adamw"):
@@ -1233,8 +1253,7 @@ def main(args):
             params_to_optimize[2]["lr"] = args.learning_rate
 
         if args.train_token:
-            pass
-            # TODO christopher !!
+            params_to_optimize[3]["lr"] = args.learning_rate
 
         optimizer = optimizer_class(
             params_to_optimize,

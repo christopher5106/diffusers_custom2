@@ -51,7 +51,7 @@ for test in tests:
             "--pretrained_vae_model_name_or_path", "madebyollin/sdxl-vae-fp16-fix",
             "--mixed_precision", "fp16",
             "--validation_prompt", "daiton",
-            # "--report_to", "wandb"
+            "--report_to", "wandb"
         ])
 
         try:
