@@ -11,7 +11,7 @@ with open("tests.json", "r") as f:
     tests = json.load(f)
 
 rank = 64
-num_steps = 10 # TODO 1500
+num_steps = 10  # TODO 1500
 
 result_dir = Path("results")
 result_dir.mkdir(exist_ok=True)
@@ -55,7 +55,8 @@ for test in tests:
         ])
 
         try:
-            train(args)
+            with wandb.init() as run:
+                train(args)
         except Exception as e:
             print(f"Train error: {e}")
             traceback.print_exc()
