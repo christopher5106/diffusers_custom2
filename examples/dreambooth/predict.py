@@ -72,10 +72,11 @@ def generate_lora_sdxl_images(
 
     # load special token
     from train_dreambooth_lora_sdxl import add_special_token
-    text_specialtoken_parameters_one = add_special_token(model.text_encoder)
-    text_specialtoken_parameters_two = add_special_token(model.text_encoder_2)
-    text_specialtoken_parameters_one[0].copy_(state_dict["text_encoder.special_token_embedding"])
-    text_specialtoken_parameters_two[0].copy_(state_dict["text_encoder_2.special_token_embedding"])
+    with torch.no_grad():
+        text_specialtoken_parameters_one = add_special_token(model.text_encoder)
+        text_specialtoken_parameters_two = add_special_token(model.text_encoder_2)
+        text_specialtoken_parameters_one[0].copy_(state_dict["text_encoder.special_token_embedding"])
+        text_specialtoken_parameters_two[0].copy_(state_dict["text_encoder_2.special_token_embedding"])
     del state_dict["text_encoder.special_token_embedding"]
     del state_dict["text_encoder_2.special_token_embedding"]
 
