@@ -79,7 +79,7 @@ def generate_lora_sdxl_images(
 
     logger.info(f"Loading LORA weights from {lora_path}")
     model.load_lora_weights(
-        lora_path,
+        state_dict,
     )  # beware, vscode points to LoraLoaderMixin instead of StableDiffusionXLLoraLoaderMixin
     # or model.unet.load_attn_procs(lora_path)
     logger.info("Moving model to GPU")
