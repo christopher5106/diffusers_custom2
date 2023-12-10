@@ -122,7 +122,7 @@ def text_encoder_lora_state_dict(text_encoder, train_special_token):
             state_dict[f"{name}.out_proj.lora_linear_layer.{k}"] = v
 
     if train_special_token:
-        state_dict["special_token_embedding"] = text_encoder.text_model.embeddings.state_dict["special_token_embedding"]
+        state_dict["special_token_embedding"] = text_encoder.text_model.embeddings.state_dict()["special_token_embedding"]
         print(type(state_dict["special_token_embedding"])) # TODO
 
     return state_dict
