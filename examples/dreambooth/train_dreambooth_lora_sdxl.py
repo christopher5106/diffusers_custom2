@@ -1742,7 +1742,7 @@ def main(args):
 
         # load attention processors
         if args.train_token:
-            state_dict = load_special_token(args.output_dir)
+            state_dict = load_special_token(pipeline, args.output_dir)
             pipeline.load_lora_weights(state_dict)
         else:
             pipeline.load_lora_weights(args.output_dir)
