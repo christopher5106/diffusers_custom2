@@ -363,7 +363,7 @@ def parse_args(input_args=None):
         help="Whether to train the text encoder. If set, the text encoder should be float32 precision.",
     )
     parser.add_argument(
-        "--train_token",
+        "--train_special_token",
         action="store_true",
         help="Whether to train a token.",
     )
@@ -1007,7 +1007,7 @@ def main(args):
 
     if args.gradient_checkpointing:
         unet.enable_gradient_checkpointing()
-        if args.train_text_encoder or args.train_token:
+        if args.train_text_encoder or args.train_special_token:
             text_encoder_one.gradient_checkpointing_enable()
             text_encoder_two.gradient_checkpointing_enable()
 
@@ -1061,7 +1061,7 @@ def main(args):
             text_encoder_two, dtype=torch.float32, rank=args.rank
         )
 
-    if args.train_token:
+    if args.train_special_token:
         text_specialtoken_parameters_one = add_special_token(text_encoder_one)
         text_specialtoken_parameters_two = add_special_token(text_encoder_two)
 
@@ -1078,9 +1078,9 @@ def main(args):
                 if isinstance(model, type(accelerator.unwrap_model(unet))):
                     unet_lora_layers_to_save = unet_lora_state_dict(model)
                 elif isinstance(model, type(accelerator.unwrap_model(text_encoder_one))):
-                    text_encoder_one_lora_layers_to_save = text_encoder_lora_state_dict(model, args.train_token)
+                    text_encoder_one_lora_layers_to_save = text_encoder_lora_state_dict(model, args.train_special_token)
                 elif isinstance(model, type(accelerator.unwrap_model(text_encoder_two))):
-                    text_encoder_two_lora_layers_to_save = text_encoder_lora_state_dict(model, args.train_token)
+                    text_encoder_two_lora_layers_to_save = text_encoder_lora_state_dict(model, args.train_special_token)
                 else:
                     raise ValueError(f"unexpected save model: {model.__class__}")
 
@@ -1156,7 +1156,7 @@ def main(args):
         params_to_optimize.append(text_lora_parameters_one_with_lr)
         params_to_optimize.append(text_lora_parameters_two_with_lr)
 
-    if args.train_token:
+    if args.train_special_token:
         text_specialtoken_parameters_one_with_lr = {
             "params": text_specialtoken_parameters_one,
             "weight_decay": args.adam_weight_decay_text_specialtoken,
@@ -1227,8 +1227,13 @@ def main(args):
             params_to_optimize[1]["lr"] = args.learning_rate
             params_to_optimize[2]["lr"] = args.learning_rate
 
-        if args.train_token:
-            params_to_optimize[3]["lr"] = args.learning_rate
+            if args.train_special_token:
+                params_to_optimize[3]["lr"] = args.learning_rate
+                params_to_optimize[4]["lr"] = args.learning_rate
+        else:
+            if args.train_special_token:
+                params_to_optimize[1]["lr"] = args.learning_rate
+                params_to_optimize[2]["lr"] = args.learning_rate
 
         optimizer = optimizer_class(
             params_to_optimize,
@@ -1280,14 +1285,14 @@ def main(args):
         add_time_ids = add_time_ids.to(accelerator.device, dtype=weight_dtype)
         return add_time_ids
 
-    if not args.train_text_encoder and not args.train_token:
+    if not args.train_text_encoder and not args.train_special_token:
         tokenizers = [tokenizer_one, tokenizer_two]
         text_encoders = [text_encoder_one, text_encoder_two]
 
         def compute_text_embeddings(prompt, text_encoders, tokenizers):
             with torch.no_grad():
                 prompt_embeds, pooled_prompt_embeds = encode_prompt(text_encoders, tokenizers, prompt,
-                                                                    special_token=args.train_token)
+                                                                    special_token=args.train_special_token)
                 prompt_embeds = prompt_embeds.to(accelerator.device)
                 pooled_prompt_embeds = pooled_prompt_embeds.to(accelerator.device)
             return prompt_embeds, pooled_prompt_embeds
@@ -1298,7 +1303,7 @@ def main(args):
     # If no type of tuning is done on the text_encoder and custom instance prompts are NOT
     # provided (i.e. the --instance_prompt is used for all images), we encode the instance prompt once to avoid
     # the redundant encoding.
-    if not args.train_text_encoder and not args.train_token and not train_dataset.custom_instance_prompts:
+    if not args.train_text_encoder and not args.train_special_token and not train_dataset.custom_instance_prompts:
         instance_prompt_hidden_states, instance_pooled_prompt_embeds = compute_text_embeddings(
             args.instance_prompt, text_encoders, tokenizers
         )
@@ -1312,7 +1317,7 @@ def main(args):
             )
 
     # Clear the memory here
-    if not args.train_text_encoder and not args.train_token and not train_dataset.custom_instance_prompts:
+    if not args.train_text_encoder and not args.train_special_token and not train_dataset.custom_instance_prompts:
         del tokenizers, text_encoders
         gc.collect()
         torch.cuda.empty_cache()
@@ -1325,7 +1330,7 @@ def main(args):
         add_time_ids = torch.cat([add_time_ids, class_time_ids], dim=0)
 
     if not train_dataset.custom_instance_prompts:
-        if not args.train_text_encoder and not args.train_token:
+        if not args.train_text_encoder and not args.train_special_token:
             prompt_embeds = instance_prompt_hidden_states
             unet_add_text_embeds = instance_pooled_prompt_embeds
             if args.with_prior_preservation:
@@ -1359,7 +1364,7 @@ def main(args):
     )
 
     # Prepare everything with our `accelerator`.
-    if args.train_text_encoder or args.train_token:
+    if args.train_text_encoder or args.train_special_token:
         unet, text_encoder_one, text_encoder_two, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
             unet, text_encoder_one, text_encoder_two, optimizer, train_dataloader, lr_scheduler
         )
@@ -1439,11 +1444,11 @@ def main(args):
             # set top parameter requires_grad = True for gradient checkpointing works
             text_encoder_one.text_model.embeddings.requires_grad_(True)
             text_encoder_two.text_model.embeddings.requires_grad_(True)
-            if args.train_token:
+            if args.train_special_token:
                 text_encoder_one.text_model.embeddings.subnet.requires_grad_(True)
                 text_encoder_two.text_model.embeddings.subnet.requires_grad_(True)
 
-        if args.train_token:
+        if args.train_special_token:
             text_encoder_one.text_model.embeddings.requires_grad_(True)
             text_encoder_two.text_model.embeddings.requires_grad_(True)
 
@@ -1454,7 +1459,7 @@ def main(args):
 
                 # encode batch prompts when custom prompts are provided for each image -
                 if train_dataset.custom_instance_prompts:
-                    if not args.train_text_encoder and not args.train_token:
+                    if not args.train_text_encoder and not args.train_special_token:
                         prompt_embeds, unet_add_text_embeds = compute_text_embeddings(
                             prompts, text_encoders, tokenizers
                         )
@@ -1490,7 +1495,7 @@ def main(args):
                     elems_to_repeat_time_ids = bsz // 2 if args.with_prior_preservation else bsz
 
                 # Predict the noise residual
-                if not args.train_text_encoder and not args.train_token:
+                if not args.train_text_encoder and not args.train_special_token:
                     unet_added_conditions = {
                         "time_ids": add_time_ids.repeat(elems_to_repeat_time_ids, 1),
                         "text_embeds": unet_add_text_embeds.repeat(elems_to_repeat_text_embeds, 1),
@@ -1509,7 +1514,7 @@ def main(args):
                         tokenizers=None,
                         prompt=None,
                         text_input_ids_list=[tokens_one, tokens_two],
-                        special_token=args.train_token
+                        special_token=args.train_special_token
                     )
                     unet_added_conditions.update(
                         {"text_embeds": pooled_prompt_embeds.repeat(elems_to_repeat_text_embeds, 1)}
@@ -1618,7 +1623,7 @@ def main(args):
                     f" {args.validation_prompt}."
                 )
                 # create pipeline
-                if not args.train_text_encoder and not args.train_token:
+                if not args.train_text_encoder and not args.train_special_token:
                     text_encoder_one = text_encoder_cls_one.from_pretrained(
                         args.pretrained_model_name_or_path,
                         subfolder="text_encoder",
@@ -1694,11 +1699,11 @@ def main(args):
         unet = unet.to(torch.float32)
         unet_lora_layers = unet_lora_state_dict(unet)
 
-        if args.train_text_encoder or args.train_token:
+        if args.train_text_encoder or args.train_special_token:
             text_encoder_one = accelerator.unwrap_model(text_encoder_one)
-            text_encoder_lora_layers = text_encoder_lora_state_dict(text_encoder_one.to(torch.float32), args.train_token)
+            text_encoder_lora_layers = text_encoder_lora_state_dict(text_encoder_one.to(torch.float32), args.train_special_token)
             text_encoder_two = accelerator.unwrap_model(text_encoder_two)
-            text_encoder_2_lora_layers = text_encoder_lora_state_dict(text_encoder_two.to(torch.float32), args.train_token)
+            text_encoder_2_lora_layers = text_encoder_lora_state_dict(text_encoder_two.to(torch.float32), args.train_special_token)
         else:
             text_encoder_lora_layers = None
             text_encoder_2_lora_layers = None
@@ -1741,7 +1746,7 @@ def main(args):
         pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config, **scheduler_args)
 
         # load attention processors
-        if args.train_token:
+        if args.train_special_token:
             state_dict = load_special_token(pipeline, args.output_dir)
             pipeline.load_lora_weights(state_dict)
         else:

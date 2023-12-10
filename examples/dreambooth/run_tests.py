@@ -35,13 +35,13 @@ for test in tests:
             "--instance_data_dir", datasetpath,
             "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
             "--output_dir", f"MODELS_{rank}/{dataset}/{replacement}",
-            "--instance_prompt", concept_prompt,
+            "--instance_prompt", " ",
             "--to_replace", to_replace,
             "--replacement", replacement,
             "--resolution", "1024",
             "--rank", str(rank),
             "--train_text_encoder",
-            "--train_token",
+            "--train_special_token",
             "--train_batch_size", "1",
             "--gradient_accumulation_steps", "1",
             "--learning_rate", "1e-4",
@@ -51,7 +51,7 @@ for test in tests:
             "--lr_scheduler", "constant",
             "--pretrained_vae_model_name_or_path", "madebyollin/sdxl-vae-fp16-fix",
             "--mixed_precision", "fp16",
-            "--validation_prompt", "daiton",
+            "--validation_prompt", " ",
             "--report_to", "wandb"
         ])
 
@@ -70,7 +70,7 @@ for test in tests:
                     base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
                     lora_path=lora_path,
                     outputs_dir=str(result_dir / dataset),
-                    prompts=[(concept_prompt + " " + p).lower().replace(to_replace, replacement) for p in validation_prompts],
+                    prompts=[(" " + p).lower().replace(to_replace, replacement) for p in validation_prompts], #concept_prompt +
                     num_images=10,
                     num_inference_steps=30,
                 )
