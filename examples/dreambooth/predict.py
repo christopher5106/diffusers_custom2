@@ -69,10 +69,10 @@ def generate_lora_sdxl_images(
     )
     # print(model.lora_state_dict(lora_path))
     state_dict, network_alphas = model.lora_state_dict(lora_path)
-    for param_tensor in state_dict:
-        print(param_tensor)
 
     del state_dict["text_encoder.special_token_embedding"]
+    for param_tensor in state_dict:
+        print(param_tensor)
 
     # for param_tensor in model.lora_state_dict(lora_path):
     #     print(param_tensor, "\t", model.lora_state_dict(lora_path)[param_tensor].size())
