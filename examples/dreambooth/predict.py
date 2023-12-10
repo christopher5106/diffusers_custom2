@@ -67,6 +67,9 @@ def generate_lora_sdxl_images(
     model = StableDiffusionXLPipeline.from_pretrained(
         base_model_path,
     )
+    for param_tensor in model.lora_state_dict():
+        print(param_tensor, "\t", model.lora_state_dict()[param_tensor].size())
+
     logger.info(f"Loading LORA weights from {lora_path}")
     model.load_lora_weights(
         lora_path,
