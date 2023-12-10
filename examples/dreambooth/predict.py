@@ -71,14 +71,21 @@ def generate_lora_sdxl_images(
     )
     logger.info(f"Loading LORA (and special token) weights from {lora_path}")
     state_dict = load_special_token(model, lora_path)
-    def tok(*args, **kwargs):
-        return [1] + model.tokenizer(*args, **kwargs)
 
-    def tok2(*args, **kwargs):
-        return [1] + model.tokenizer2(*args, **kwargs)
+    from transformers.models.clips.tokenization_clip import CLIPTokenizer
+    class CLIPTokenizerModified(CLIPTokenizer):
+        @classmethod
+        def cast(cls, tokenizer: CLIPTokenizer):
+            assert isinstance(some_a, CLIPTokenizer)
+            some_a.__class__ = cls
+            assert isinstance(some_a, CLIPTokenizerModified)
+            return some_a
+        def _tokenize(self, text):
+            print("adding one special token")
+            return [1] + super()._tokenize(text)
 
-    model.tokenizer = tok
-    model.tokenizer_2 = tok2
+    model.tokenizer = CLIPTokenizerModified.cast(model.tokenizer)
+    model.tokenizer_2 = CLIPTokenizerModified.cast(model.tokenizer_2)
 
     model.load_lora_weights(
         state_dict,
