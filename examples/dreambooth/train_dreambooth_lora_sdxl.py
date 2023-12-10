@@ -98,7 +98,6 @@ def text_encoder_lora_state_dict(text_encoder, train_special_token):
 
     if train_special_token:
         state_dict["special_token_embedding"] = text_encoder.text_model.embeddings.state_dict()["special_token_embedding"]
-        print(type(state_dict["special_token_embedding"])) # TODO
 
     return state_dict
 
@@ -1696,7 +1695,7 @@ def main(args):
         unet_lora_layers = unet_lora_state_dict(unet)
 
         if args.train_text_encoder or args.train_token:
-            text_encoder_one = accelerator.unwrap_model(text_encoder_one) # TODO christopher!!!
+            text_encoder_one = accelerator.unwrap_model(text_encoder_one)
             text_encoder_lora_layers = text_encoder_lora_state_dict(text_encoder_one.to(torch.float32), args.train_token)
             text_encoder_two = accelerator.unwrap_model(text_encoder_two)
             text_encoder_2_lora_layers = text_encoder_lora_state_dict(text_encoder_two.to(torch.float32), args.train_token)
@@ -1742,7 +1741,11 @@ def main(args):
         pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config, **scheduler_args)
 
         # load attention processors
-        pipeline.load_lora_weights(args.output_dir)
+        if args.train_token:
+            state_dict = load_special_token(args.output_dir)
+            pipeline.load_lora_weights(state_dict)
+        else:
+            pipeline.load_lora_weights(args.output_dir)
 
         # run inference
         images = []

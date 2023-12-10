@@ -30,38 +30,39 @@ for test in tests:
 
     for replacement in replacements:
 
-        # print(f"  replacement of {to_replace}: {replacement}")
-        # args = parse_args(input_args=[
-        #     "--instance_data_dir", datasetpath,
-        #     "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
-        #     "--output_dir", f"MODELS_{rank}/{dataset}/{replacement}",
-        #     "--instance_prompt", concept_prompt,
-        #     "--to_replace", to_replace,
-        #     "--replacement", replacement,
-        #     "--resolution", "1024",
-        #     "--rank", str(rank),
-        #     "--train_text_encoder",
-        #     "--train_token",
-        #     "--train_batch_size", "1",
-        #     "--gradient_accumulation_steps", "1",
-        #     "--learning_rate", "1e-4",
-        #     "--lr_warmup_steps", "0",
-        #     "--max_train_steps", f"{num_steps}",
-        #     "--seed", "3407",
-        #     "--lr_scheduler", "constant",
-        #     "--pretrained_vae_model_name_or_path", "madebyollin/sdxl-vae-fp16-fix",
-        #     "--mixed_precision", "fp16",
-        #     "--validation_prompt", "daiton",
-        #     "--report_to", "wandb"
-        # ])
-        #
-        # try:
-        #     with wandb.init(config=vars(args)) as run:
-        #         train(args)
-        # except Exception as e:
-        #     print(f"Train error: {e}")
-        #     traceback.print_exc()
+        print(f"  replacement of {to_replace}: {replacement}")
+        args = parse_args(input_args=[
+            "--instance_data_dir", datasetpath,
+            "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
+            "--output_dir", f"MODELS_{rank}/{dataset}/{replacement}",
+            "--instance_prompt", concept_prompt,
+            "--to_replace", to_replace,
+            "--replacement", replacement,
+            "--resolution", "1024",
+            "--rank", str(rank),
+            "--train_text_encoder",
+            "--train_token",
+            "--train_batch_size", "1",
+            "--gradient_accumulation_steps", "1",
+            "--learning_rate", "1e-4",
+            "--lr_warmup_steps", "0",
+            "--max_train_steps", f"{num_steps}",
+            "--seed", "3407",
+            "--lr_scheduler", "constant",
+            "--pretrained_vae_model_name_or_path", "madebyollin/sdxl-vae-fp16-fix",
+            "--mixed_precision", "fp16",
+            "--validation_prompt", "daiton",
+            "--report_to", "wandb"
+        ])
 
+        try:
+            with wandb.init(config=vars(args)) as run:
+                train(args)
+        except Exception as e:
+            print(f"Train error: {e}")
+            traceback.print_exc()
+
+        exit()
 
         for checkpoint in [f""]: # checkpoint-500
             lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
@@ -77,7 +78,6 @@ for test in tests:
             except Exception as e:
                 print(f"Inference error {e}")
                 traceback.print_exc()
-        exit()
 
 
     html = f"<h1>{dataset}</h1>"
