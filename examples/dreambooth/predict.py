@@ -17,6 +17,8 @@ import math
 from diffusers import StableDiffusionXLPipeline
 from loguru import logger
 
+from special_token import load_special_token
+
 # fix seed
 SEED = 3407
 random.seed(SEED)
@@ -67,19 +69,7 @@ def generate_lora_sdxl_images(
     model = StableDiffusionXLPipeline.from_pretrained(
         base_model_path,
     )
-    # print(model.lora_state_dict(lora_path))
-    state_dict, network_alphas = model.lora_state_dict(lora_path)
-
-    # load special token
-    from train_dreambooth_lora_sdxl import add_special_token
-    with torch.no_grad():
-        text_specialtoken_parameters_one = add_special_token(model.text_encoder)
-        text_specialtoken_parameters_two = add_special_token(model.text_encoder_2)
-        text_specialtoken_parameters_one[0].copy_(state_dict["text_encoder.special_token_embedding"])
-        text_specialtoken_parameters_two[0].copy_(state_dict["text_encoder_2.special_token_embedding"])
-    del state_dict["text_encoder.special_token_embedding"]
-    del state_dict["text_encoder_2.special_token_embedding"]
-
+    state_dict = load_special_token(model)
     logger.info(f"Loading LORA weights from {lora_path}")
     model.load_lora_weights(
         state_dict,

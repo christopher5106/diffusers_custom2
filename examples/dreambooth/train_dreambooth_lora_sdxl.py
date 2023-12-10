@@ -58,43 +58,12 @@ from diffusers.utils.import_utils import is_xformers_available
 
 from typing import Optional
 
+from special_token import load_special_token, add_special_token
 
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
 check_min_version("0.24.0.dev0")
 
 logger = get_logger(__name__)
-
-from torch import nn
-from typing import Optional
-class CLIPTextEmbeddingsSpecialToken(nn.Module):
-    def __init__(self, clip_text_embeddings):
-        super().__init__()
-        self.subnet = clip_text_embeddings
-        embed_dim = self.subnet.token_embedding.embedding_dim  # 768, 1280 (for each encoder)
-        self.special_token_embedding = torch.nn.Parameter(
-            torch.zeros((1, 1, embed_dim), dtype=torch.float32)
-        )
-
-    def forward(
-        self,
-        input_ids: Optional[torch.LongTensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-    ) -> torch.Tensor:
-
-        assert position_ids is None
-        assert inputs_embeds is None  # TODO has been not sliced because it's mainly None
-        embeddings = torch.cat([
-            self.special_token_embedding.repeat(1, 1, 1), # TODO repeat with correct batch size instead of 1
-            self.subnet(input_ids[:, 1:], position_ids, inputs_embeds)  # (batch size, position, emb_size)
-        ], dim=1)
-        return embeddings
-
-
-def add_special_token(text_encoder):
-    special_embeddings = CLIPTextEmbeddingsSpecialToken(text_encoder.text_model.embeddings)
-    text_encoder.text_model.embeddings = special_embeddings
-    return [special_embeddings.special_token_embedding]
 
 
 # TODO: This function should be removed once training scripts are rewritten in PEFT
