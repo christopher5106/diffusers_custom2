@@ -77,6 +77,7 @@ for test in tests:
             except Exception as e:
                 print(f"Inference error {e}")
                 traceback.print_exc()
+        exit()
 
 
     html = f"<h1>{dataset}</h1>"

@@ -76,10 +76,10 @@ def generate_lora_sdxl_images(
     class CLIPTokenizerModified(CLIPTokenizer):
         @classmethod
         def cast(cls, tokenizer: CLIPTokenizer):
-            assert isinstance(some_a, CLIPTokenizer)
-            some_a.__class__ = cls
-            assert isinstance(some_a, CLIPTokenizerModified)
-            return some_a
+            assert isinstance(tokenizer, CLIPTokenizer)
+            tokenizer.__class__ = cls
+            assert isinstance(tokenizer, CLIPTokenizerModified)
+            return tokenizer
         def _tokenize(self, text):
             print("adding one special token")
             return [1] + super()._tokenize(text)
