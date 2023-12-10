@@ -2,6 +2,7 @@ import argparse
 import traceback
 import json
 from pathlib import Path
+import wandb
 
 from train_dreambooth_lora_sdxl import main as train
 from train_dreambooth_lora_sdxl import parse_args
