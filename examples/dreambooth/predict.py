@@ -71,6 +71,15 @@ def generate_lora_sdxl_images(
     )
     logger.info(f"Loading LORA (and special token) weights from {lora_path}")
     state_dict = load_special_token(model, lora_path)
+    def tok(*args, **kwargs):
+        return [1] + model.tokenizer(*args, **kwargs)
+
+    def tok2(*args, **kwargs):
+        return [1] + model.tokenizer2(*args, **kwargs)
+
+    model.tokenizer = tok
+    model.tokenizer_2 = tok2
+
     model.load_lora_weights(
         state_dict,
     )  # beware, vscode points to LoraLoaderMixin instead of StableDiffusionXLLoraLoaderMixin
