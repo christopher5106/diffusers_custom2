@@ -34,7 +34,7 @@ def add_special_token(text_encoder):
     return [special_embeddings.special_token_embedding]
 
 
-def load_special_token(model):
+def load_special_token(model, lora_path):
     state_dict, network_alphas = model.lora_state_dict(lora_path)
     assert network_alphas is None
     with torch.no_grad():

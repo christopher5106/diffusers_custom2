@@ -69,8 +69,8 @@ def generate_lora_sdxl_images(
     model = StableDiffusionXLPipeline.from_pretrained(
         base_model_path,
     )
-    state_dict = load_special_token(model)
-    logger.info(f"Loading LORA weights from {lora_path}")
+    logger.info(f"Loading LORA (and special token) weights from {lora_path}")
+    state_dict = load_special_token(model, lora_path)
     model.load_lora_weights(
         state_dict,
     )  # beware, vscode points to LoraLoaderMixin instead of StableDiffusionXLLoraLoaderMixin
