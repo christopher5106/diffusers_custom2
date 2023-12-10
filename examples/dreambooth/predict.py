@@ -67,7 +67,7 @@ def generate_lora_sdxl_images(
     model = StableDiffusionXLPipeline.from_pretrained(
         base_model_path,
     )
-    print(model.lora_state_dict(lora_path))
+    # print(model.lora_state_dict(lora_path))
     for param_tensor in model.lora_state_dict(lora_path):
         print(param_tensor)
 
