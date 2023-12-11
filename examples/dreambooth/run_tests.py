@@ -75,7 +75,7 @@ for test in tests:
                 generate_lora_sdxl_images(
                     base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
                     lora_path=lora_path,
-                    outputs_dir=str(result_dir / dataset),
+                    outputs_dir=str(result_dir / dataset / checkpoint),
                     prompts=_validation_prompts,
                     num_images=10,
                     num_inference_steps=30,
