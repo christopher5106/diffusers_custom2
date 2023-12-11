@@ -13,7 +13,7 @@ with open("tests.json", "r") as f:
 
 rank = 64
 num_steps = 1500
-train_token = False
+train_token = True
 
 result_dir = Path("results")
 result_dir.mkdir(exist_ok=True)
@@ -69,7 +69,7 @@ for test in tests:
             print(f"Train error: {e}")
             traceback.print_exc()
 
-        for checkpoint in ["checkpoint-1500"]: # "checkpoint-500", "checkpoint-1000", 
+        for checkpoint in ["checkpoint-1500"]: # "checkpoint-500", "checkpoint-1000",
             lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
             _validation_prompts = [
                 (concept_prompt + " " + p).lower().replace(to_replace, replacement)
