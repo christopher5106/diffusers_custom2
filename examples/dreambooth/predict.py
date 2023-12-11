@@ -47,6 +47,7 @@ def generate_lora_sdxl_images(
     num_images: int,
     num_inference_steps: int,
     prompts_2: str = None,
+    train_token = False
 ) -> None:
     """Generate images from a text prompt using LORA weights and sdxl.
 
@@ -70,26 +71,33 @@ def generate_lora_sdxl_images(
         base_model_path,
     )
     logger.info(f"Loading LORA (and special token) weights from {lora_path}")
-    state_dict = load_special_token(model, lora_path)
 
-    from transformers.models.clip.tokenization_clip import CLIPTokenizer
-    class CLIPTokenizerModified(CLIPTokenizer):
-        @classmethod
-        def cast(cls, tokenizer: CLIPTokenizer):
-            assert isinstance(tokenizer, CLIPTokenizer)
-            tokenizer.__class__ = cls
-            assert isinstance(tokenizer, CLIPTokenizerModified)
-            return tokenizer
-        def _tokenize(self, text):
-            print("adding one special token")
-            return [1] + super()._tokenize(text)
+    if train_token:
+        state_dict = load_special_token(model, lora_path)
 
-    model.tokenizer = CLIPTokenizerModified.cast(model.tokenizer)
-    model.tokenizer_2 = CLIPTokenizerModified.cast(model.tokenizer_2)
+        from transformers.models.clip.tokenization_clip import CLIPTokenizer
+        class CLIPTokenizerModified(CLIPTokenizer):
+            @classmethod
+            def cast(cls, tokenizer: CLIPTokenizer):
+                assert isinstance(tokenizer, CLIPTokenizer)
+                tokenizer.__class__ = cls
+                assert isinstance(tokenizer, CLIPTokenizerModified)
+                return tokenizer
+            def _tokenize(self, text):
+                print("adding one special token")
+                return [1] + super()._tokenize(text)
 
-    model.load_lora_weights(
-        state_dict,
-    )  # beware, vscode points to LoraLoaderMixin instead of StableDiffusionXLLoraLoaderMixin
+        model.tokenizer = CLIPTokenizerModified.cast(model.tokenizer)
+        model.tokenizer_2 = CLIPTokenizerModified.cast(model.tokenizer_2)
+
+        model.load_lora_weights(
+            state_dict,
+        )  # beware, vscode points to LoraLoaderMixin instead of StableDiffusionXLLoraLoaderMixin
+    else:
+        model.load_lora_weights(
+            lora_path,
+        )  # beware, vscode points to LoraLoaderMixin instead of StableDiffusionXLLoraLoaderMixin
+
     # or model.unet.load_attn_procs(lora_path)
     logger.info("Moving model to GPU")
     model.to("cuda")  # move pipe to GPU

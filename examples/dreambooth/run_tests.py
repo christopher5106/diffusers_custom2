@@ -13,6 +13,7 @@ with open("tests.json", "r") as f:
 
 rank = 64
 num_steps = 1500
+train_token = False
 
 result_dir = Path("results")
 result_dir.mkdir(exist_ok=True)
@@ -28,12 +29,13 @@ for test in tests:
     to_replace = test.get("to_replace", "qsdfkjlqlmdksjflmdqksjflmqjsfmqlksjfm")
     replacements = test.get("replacements", "")
 
-    concept_prompt = ""
+    if train_token:
+        concept_prompt = ""  # erase concept prompt
 
     for replacement in replacements:
 
         print(f"  replacement of {to_replace}: {replacement}")
-        args = parse_args(input_args=[
+        input_args = [
             "--instance_data_dir", datasetpath,
             "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
             "--output_dir", f"MODELS_{rank}/{dataset}/{replacement}",
@@ -43,7 +45,6 @@ for test in tests:
             "--resolution", "1024",
             "--rank", str(rank),
             "--train_text_encoder",
-            "--train_special_token",
             "--train_batch_size", "1",
             "--gradient_accumulation_steps", "1",
             "--learning_rate", "1e-4",
@@ -56,7 +57,10 @@ for test in tests:
             "--mixed_precision", "fp16",
             "--validation_prompt", concept_prompt,
             "--report_to", "wandb"
-        ])
+        ]
+        if train_token:
+            input_args.append("--train_special_token")
+        args = parse_args(input_args=input_args)
 
         try:
             with wandb.init(config=vars(args)) as run:
@@ -65,7 +69,7 @@ for test in tests:
             print(f"Train error: {e}")
             traceback.print_exc()
 
-        for checkpoint in ["checkpoint-500", "checkpoint-1000", "checkpoint-1500"]:
+        for checkpoint in ["checkpoint-1500"]: # "checkpoint-500", "checkpoint-1000", 
             lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
             _validation_prompts = [
                 (concept_prompt + " " + p).lower().replace(to_replace, replacement)
@@ -79,6 +83,7 @@ for test in tests:
                     prompts=_validation_prompts,
                     num_images=10,
                     num_inference_steps=30,
+                    train_token=train_token
                 )
             except Exception as e:
                 print(f"Inference error {e}")
