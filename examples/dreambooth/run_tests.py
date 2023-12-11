@@ -57,13 +57,12 @@ for test in tests:
             "--report_to", "wandb"
         ])
 
-        # try:
-        #     with wandb.init(config=vars(args)) as run:
-        #         train(args)
-        # except Exception as e:
-        #     print(f"Train error: {e}")
-        #     traceback.print_exc()
-
+        try:
+            with wandb.init(config=vars(args)) as run:
+                train(args)
+        except Exception as e:
+            print(f"Train error: {e}")
+            traceback.print_exc()
 
         for checkpoint in ["checkpoint-500","checkpoint-1000", "checkpoint-1500"]:
             lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
