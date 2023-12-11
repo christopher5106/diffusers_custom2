@@ -64,7 +64,7 @@ for test in tests:
             print(f"Train error: {e}")
             traceback.print_exc()
 
-        for checkpoint in ["checkpoint-500","checkpoint-1000", "checkpoint-1500"]:
+        for checkpoint in ["checkpoint-500", "checkpoint-1000", "checkpoint-1500"]:
             lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
             _validation_prompts = [
                 (concept_prompt + " " + p).lower().replace(to_replace, replacement)
