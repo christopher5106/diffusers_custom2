@@ -28,6 +28,8 @@ for test in tests:
     to_replace = test.get("to_replace", "qsdfkjlqlmdksjflmdqksjflmqjsfmqlksjfm")
     replacements = test.get("replacements", "")
 
+    concept_prompt = ""
+
     for replacement in replacements:
 
         print(f"  replacement of {to_replace}: {replacement}")
@@ -35,7 +37,7 @@ for test in tests:
             "--instance_data_dir", datasetpath,
             "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
             "--output_dir", f"MODELS_{rank}/{dataset}/{replacement}",
-            "--instance_prompt", " ",
+            "--instance_prompt", concept_prompt,
             "--to_replace", to_replace,
             "--replacement", replacement,
             "--resolution", "1024",
@@ -51,7 +53,7 @@ for test in tests:
             "--lr_scheduler", "constant",
             "--pretrained_vae_model_name_or_path", "madebyollin/sdxl-vae-fp16-fix",
             "--mixed_precision", "fp16",
-            "--validation_prompt", " ",
+            "--validation_prompt", concept_prompt,
             "--report_to", "wandb"
         ])
 
@@ -63,14 +65,18 @@ for test in tests:
         #     traceback.print_exc()
 
 
-        for checkpoint in [f""]: # checkpoint-500
+        for checkpoint in ["checkpoint-500","checkpoint-1000", "checkpoint-1500"]:
             lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
+            _validation_prompts = [
+                (concept_prompt + " " + p).lower().replace(to_replace, replacement)
+                for p in validation_prompts
+            ]
             try:
                 generate_lora_sdxl_images(
                     base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
                     lora_path=lora_path,
                     outputs_dir=str(result_dir / dataset),
-                    prompts=[(" " + p).lower().replace(to_replace, replacement) for p in validation_prompts], #concept_prompt +
+                    prompts=_validation_prompts,
                     num_images=10,
                     num_inference_steps=30,
                 )
