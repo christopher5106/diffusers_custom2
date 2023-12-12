@@ -48,7 +48,7 @@ do
   --lr_scheduler="constant" \
   --pretrained_vae_model_name_or_path=$VAE_PATH \
   --mixed_precision="fp16" \
-  --validation_prompt="daiton$POSTPROMPT" \
+    --validation_prompt="daiton$POSTPROMPT" \
   --report_to="wandb"
 
   for CHECKPOINT in "checkpoint-3000"; # "checkpoint-1500" "checkpoint-5000"

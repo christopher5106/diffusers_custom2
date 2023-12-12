@@ -17,7 +17,7 @@ import math
 from diffusers import StableDiffusionXLPipeline
 from loguru import logger
 
-from special_token import load_special_token
+from special_token import load_special_token, modify_tokenizers
 
 # fix seed
 SEED = 3407
@@ -74,22 +74,7 @@ def generate_lora_sdxl_images(
 
     if train_token:
         state_dict = load_special_token(model, lora_path)
-
-        from transformers.models.clip.tokenization_clip import CLIPTokenizer
-        class CLIPTokenizerModified(CLIPTokenizer):
-            @classmethod
-            def cast(cls, tokenizer: CLIPTokenizer):
-                assert isinstance(tokenizer, CLIPTokenizer)
-                tokenizer.__class__ = cls
-                assert isinstance(tokenizer, CLIPTokenizerModified)
-                return tokenizer
-            def _tokenize(self, text):
-                print("adding one special token")
-                return [1] + super()._tokenize(text)
-
-        model.tokenizer = CLIPTokenizerModified.cast(model.tokenizer)
-        model.tokenizer_2 = CLIPTokenizerModified.cast(model.tokenizer_2)
-
+        modify_tokenizers(model)
         model.load_lora_weights(
             state_dict,
         )  # beware, vscode points to LoraLoaderMixin instead of StableDiffusionXLLoraLoaderMixin

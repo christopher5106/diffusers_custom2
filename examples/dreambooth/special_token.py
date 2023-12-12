@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from typing import Optional
-
+from transformers.models.clip.tokenization_clip import CLIPTokenizer
 
 class CLIPTextEmbeddingsSpecialToken(nn.Module):
     def __init__(self, clip_text_embeddings):
@@ -21,9 +21,16 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
 
         assert position_ids is None
         assert inputs_embeds is None  # TODO has been not sliced because it's mainly None
+
+        subnet_embeddings = self.subnet(input_ids[:, 1:], position_ids, inputs_embeds)  # (batch size, position, emb_size)
+        starttoken_embedding = subnet_embeddings[:, 0, :]
+        nexttokens_embedding = subnet_embeddings[:, 1:, :]
+
+
         embeddings = torch.cat([
+            starttoken_embedding,
             self.special_token_embedding.repeat(1, 1, 1),  # TODO repeat with correct batch size instead of 1
-            self.subnet(input_ids[:, 1:], position_ids, inputs_embeds)  # (batch size, position, emb_size)
+            nexttokens_embedding
         ], dim=1)
         return embeddings
 
@@ -45,3 +52,19 @@ def load_special_token(model, lora_path):
     del state_dict["text_encoder.special_token_embedding"]
     del state_dict["text_encoder_2.special_token_embedding"]
     return state_dict
+
+
+class CLIPTokenizerModified(CLIPTokenizer):
+    @classmethod
+    def cast(cls, tokenizer: CLIPTokenizer):
+        assert isinstance(tokenizer, CLIPTokenizer)
+        tokenizer.__class__ = cls
+        assert isinstance(tokenizer, CLIPTokenizerModified)
+        return tokenizer
+    def _tokenize(self, text):
+        print("adding one special token")
+        return ["<|startoftext|>"] + super()._tokenize(text)
+
+def modify_tokenizers(model):
+    model.tokenizer = CLIPTokenizerModified.cast(model.tokenizer)
+    model.tokenizer_2 = CLIPTokenizerModified.cast(model.tokenizer_2)
