@@ -13,7 +13,7 @@ with open("tests.json", "r") as f:
 
 rank = 64
 num_steps = 1500
-num_special_tokens = 3
+num_special_tokens = 1
 
 result_dir = Path("results")
 result_dir.mkdir(exist_ok=True)
