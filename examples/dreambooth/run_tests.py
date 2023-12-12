@@ -13,7 +13,7 @@ with open("tests.json", "r") as f:
 
 rank = 64
 num_steps = 1500
-train_token = True
+num_special_tokens = 3
 
 result_dir = Path("results")
 result_dir.mkdir(exist_ok=True)
@@ -29,7 +29,7 @@ for test in tests:
     to_replace = test.get("to_replace", "qsdfkjlqlmdksjflmdqksjflmqjsfmqlksjfm")
     replacements = test.get("replacements", "")
 
-    if train_token:
+    if num_special_tokens > 0:
         concept_prompt = ""  # erase concept prompt
 
     for replacement in replacements:
@@ -48,6 +48,7 @@ for test in tests:
             "--train_batch_size", "1",
             "--gradient_accumulation_steps", "1",
             "--learning_rate", "1e-4",
+            "--num_special_tokens", str(num_special_tokens),
             "--text_specialtoken_lr", "1e-4",
             "--text_encoder_lr", "0",
             "--lr_warmup_steps", "0",
@@ -59,8 +60,6 @@ for test in tests:
             "--validation_prompt", concept_prompt,
             "--report_to", "wandb"
         ]
-        if train_token:
-            input_args.append("--train_special_token")
         args = parse_args(input_args=input_args)
 
         try:
@@ -70,7 +69,7 @@ for test in tests:
             print(f"Train error: {e}")
             traceback.print_exc()
 
-        for checkpoint in ["checkpoint-1500"]: # "checkpoint-500", "checkpoint-1000",
+        for checkpoint in ["checkpoint-1500"]:  # "checkpoint-500", "checkpoint-1000",
             lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
             _validation_prompts = [
                 (concept_prompt + " " + p).lower().replace(to_replace, replacement)
@@ -84,7 +83,7 @@ for test in tests:
                     prompts=_validation_prompts,
                     num_images=10,
                     num_inference_steps=30,
-                    train_token=train_token
+                    num_special_tokens=num_special_tokens
                 )
             except Exception as e:
                 print(f"Inference error {e}")

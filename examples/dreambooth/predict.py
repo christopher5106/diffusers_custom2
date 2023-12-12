@@ -47,7 +47,7 @@ def generate_lora_sdxl_images(
     num_images: int,
     num_inference_steps: int,
     prompts_2: str = None,
-    train_token = False
+    num_special_tokens = 0
 ) -> None:
     """Generate images from a text prompt using LORA weights and sdxl.
 
@@ -72,12 +72,12 @@ def generate_lora_sdxl_images(
     )
     logger.info(f"Loading LORA (and special token) weights from {lora_path}")
 
-    if train_token:
-        state_dict = load_special_token(model, lora_path)
-        modify_tokenizers(model)
+    if num_special_tokens > 0:
+        state_dict = load_special_token(model, lora_path, num_special_tokens)
+        modify_tokenizers(model, num_special_tokens)
         model.load_lora_weights(
             state_dict,
-        )  # beware, vscode points to LoraLoaderMixin instead of StableDiffusionXLLoraLoaderMixin
+        )
     else:
         model.load_lora_weights(
             lora_path,
