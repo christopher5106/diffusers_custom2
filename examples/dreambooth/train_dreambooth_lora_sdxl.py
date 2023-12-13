@@ -1474,14 +1474,27 @@ def main(args):
 
         for step, batch in enumerate(train_dataloader):
             with accelerator.accumulate(unet):
-                for g in optimizer.param_groups:
-                    # print(g)
-                    print(g["lr"])
-                if step == 2:
-                    for g in optimizer.param_groups:
-                        # print(g)
-                        g["lr"] = 0
-                print(text_specialtoken_parameters_one[0].data)
+                if step < 200:
+                    optimizer.param_groups[0] = 0
+                    optimizer.param_groups[1] = 0
+                    optimizer.param_groups[2] = 0
+                    optimizer.param_groups[3] = 1e-4
+                    optimizer.param_groups[4] = 1e-4
+                else:
+                    optimizer.param_groups[0] = 0
+                    optimizer.param_groups[1] = 1e-6
+                    optimizer.param_groups[2] = 1e-6
+                    optimizer.param_groups[3] = 1e-6
+                    optimizer.param_groups[4] = 1e-6
+
+                # for g in optimizer.param_groups:
+                #     # print(g)
+                #     print(g["lr"])
+                # if step == 2:
+                #     for g in optimizer.param_groups:
+                #         # print(g)
+                #         g["lr"] = 0
+                # print(text_specialtoken_parameters_one[0].data)
 
                 pixel_values = batch["pixel_values"].to(dtype=vae.dtype)
                 prompts = batch["prompts"]

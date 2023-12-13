@@ -35,60 +35,40 @@ for test in tests:
         if num_special_tokens > 0:
             concept_prompt = ""  # erase concept prompt
 
-        # for replacement in replacements:
+        input_args = [
+            "--instance_data_dir", datasetpath,
+            "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
+            "--output_dir", f"MODELS_{rank}/{dataset}/{num_special_tokens}/",
+            "--instance_prompt", concept_prompt,
+            "--to_replace", to_replace,
+            "--replacement", replacement,
+            "--resolution", "1024",
+            "--rank", str(rank),
+            "--train_batch_size", "1",
+            "--gradient_accumulation_steps", "1",
+            "--num_special_tokens", str(num_special_tokens),
+            "--lr_warmup_steps", "0",
+            "--seed", "3407",
+            "--lr_scheduler", "constant",
+            "--pretrained_vae_model_name_or_path", "madebyollin/sdxl-vae-fp16-fix",
+            "--mixed_precision", "fp16",
+            "--validation_prompt", concept_prompt,
+            "--report_to", "wandb",
+            "--train_text_encoder",
+            "--learning_rate", "1e-4",
+            "--text_encoder_lr", "1e-6",
+            "--text_specialtoken_lr", "1e-6",
+            "--resume_from_checkpoint", f"MODELS_{rank}/{dataset}/{num_special_tokens}/",
+            "--max_train_steps", "3000",
+        ]
+        args = parse_args(input_args=input_args)
 
-        stage1 = {
-            "name": "learning special token",
-            "params": [
-                "--learning_rate", "0",
-                "--text_encoder_lr", "0",
-                "--text_specialtoken_lr", "1e-4",
-                "--max_train_steps", "500"
-            ]
-        }
-
-        stage2 = {
-            "name": "full training",
-            "params": [
-                "--train_text_encoder",
-                "--learning_rate", "1e-4",
-                "--text_encoder_lr", "1e-6",
-                "--text_specialtoken_lr", "1e-6",
-                "--resume_from_checkpoint", f"MODELS_{rank}/{dataset}/{num_special_tokens}/",
-                "--max_train_steps", "3000",
-            ]
-        }
-
-        for stage in [stage1, stage2]:
-            print(f">TRAINING STAGE: {stage['name']}")
-            input_args = [
-                "--instance_data_dir", datasetpath,
-                "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
-                "--output_dir", f"MODELS_{rank}/{dataset}/{num_special_tokens}/",
-                "--instance_prompt", concept_prompt,
-                "--to_replace", to_replace,
-                "--replacement", replacement,
-                "--resolution", "1024",
-                "--rank", str(rank),
-                "--train_batch_size", "1",
-                "--gradient_accumulation_steps", "1",
-                "--num_special_tokens", str(num_special_tokens),
-                "--lr_warmup_steps", "0",
-                "--seed", "3407",
-                "--lr_scheduler", "constant",
-                "--pretrained_vae_model_name_or_path", "madebyollin/sdxl-vae-fp16-fix",
-                "--mixed_precision", "fp16",
-                "--validation_prompt", concept_prompt,
-                "--report_to", "wandb"
-            ] + stage["params"]
-            args = parse_args(input_args=input_args)
-
-            try:
-                with wandb.init(config=vars(args)) as run:
-                    train(args)
-            except Exception as e:
-                print(f"Train error: {e}")
-                traceback.print_exc()
+        try:
+            with wandb.init(config=vars(args)) as run:
+                train(args)
+        except Exception as e:
+            print(f"Train error: {e}")
+            traceback.print_exc()
 
         for checkpoint in ["checkpoint-1500", "checkpoint-3000", ""]:  # "checkpoint-500",
             lora_path = f"MODELS_{rank}/{dataset}/{num_special_tokens}/{checkpoint}/pytorch_lora_weights.safetensors"
