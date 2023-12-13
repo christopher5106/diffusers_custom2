@@ -1481,7 +1481,7 @@ def main(args):
                     for g in optimizer.param_groups:
                         # print(g)
                         g["lr"] = 0
-                print(text_specialtoken_parameters_one[0].value)
+                print(text_specialtoken_parameters_one[0].data)
 
                 pixel_values = batch["pixel_values"].to(dtype=vae.dtype)
                 prompts = batch["prompts"]
