@@ -43,7 +43,8 @@ for test in tests:
                 "--learning_rate", "0",
                 "--text_encoder_lr", "0",
                 "--text_specialtoken_lr", "1e-4",
-                "--max_train_steps", "500"
+                "--max_train_steps", "5",
+                "--resume_from_checkpoint", f"MODELS_{rank}/{dataset}/{num_special_tokens}/",
             ]
         }
 
