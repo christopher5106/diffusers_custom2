@@ -1477,7 +1477,10 @@ def main(args):
                 for g in optimizer.param_groups:
                     # print(g)
                     print(g["lr"])
-
+                if step == 2:
+                    for g in optimizer.param_groups:
+                        # print(g)
+                        g["lr"] = 0
 
                 pixel_values = batch["pixel_values"].to(dtype=vae.dtype)
                 prompts = batch["prompts"]
