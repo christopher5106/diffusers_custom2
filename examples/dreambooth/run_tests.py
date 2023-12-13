@@ -12,8 +12,6 @@ with open("tests.json", "r") as f:
     tests = json.load(f)
 
 rank = 64
-num_steps = 5000
-num_special_tokens = 1
 
 result_dir = Path("results")
 result_dir.mkdir(exist_ok=True)
@@ -26,71 +24,83 @@ for test in tests:
     datasetpath = test["dataset_path"]  # DATASETPATH = " /home/ubuntu/phoenix/data/inputs/tests/train/DATASET/inputs/
     concept_prompt = test["concept_prompt"]
     validation_prompts = test["validation_prompts"]
-    to_replace = "sdlfjqlsjl kjmlk jm kljj lmkjl mlkj "
+    to_replace = "sdlfjqlsjlkjmlkjmkljjlmkjlmlkj"
     replacement = ""
 
     # to_replace = test.get("to_replace", "qsdfkjlqlmdksjflmdqksjflmqjsfmqlksjfm")
     # replacements = test.get("replacements", "")
 
-    if num_special_tokens > 0:
-        concept_prompt = ""  # erase concept prompt
+    for num_special_tokens in [1, 3]:
 
-    # for replacement in replacements:
+        if num_special_tokens > 0:
+            concept_prompt = ""  # erase concept prompt
 
-    print(f"  replacement of {to_replace}: {replacement}")
-    input_args = [
-        "--instance_data_dir", datasetpath,
-        "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
-        "--output_dir", f"MODELS_{rank}/{dataset}/{replacement}",
-        "--instance_prompt", concept_prompt,
-        "--to_replace", to_replace,
-        "--replacement", replacement,
-        "--resolution", "1024",
-        "--rank", str(rank),
-        "--train_text_encoder",
-        "--train_batch_size", "1",
-        "--gradient_accumulation_steps", "1",
-        "--learning_rate", "1e-4",
-        "--num_special_tokens", str(num_special_tokens),
-        "--text_specialtoken_lr", "1e-4",
-        "--text_encoder_lr", "0.1",
-        "--lr_warmup_steps", "0",
-        "--max_train_steps", f"{num_steps}",
-        "--seed", "3407",
-        "--lr_scheduler", "constant",
-        "--pretrained_vae_model_name_or_path", "madebyollin/sdxl-vae-fp16-fix",
-        "--mixed_precision", "fp16",
-        "--validation_prompt", concept_prompt,
-        "--report_to", "wandb"
-    ]
-    args = parse_args(input_args=input_args)
+        # for replacement in replacements:
 
-    try:
-        with wandb.init(config=vars(args)) as run:
-            train(args)
-    except Exception as e:
-        print(f"Train error: {e}")
-        traceback.print_exc()
+        for stage in [
+            [
+                "--learning_rate", "0",
+                "--text_encoder_lr", "0",
+                "--text_specialtoken_lr", "1e-4",
+                "--max_train_steps", "500"
+            ],
+            [
+                "--train_text_encoder",
+                "--learning_rate", "1e-4",
+                "--text_encoder_lr", "1e-6",
+                "--text_specialtoken_lr", "1e-6",
+                "--resume_from_checkpoint", f"MODELS_{rank}/{dataset}/{num_special_tokens}/",
+                "--max_train_steps", "3000",
+            ]
+        ]:
+            input_args = [
+                "--instance_data_dir", datasetpath,
+                "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
+                "--output_dir", f"MODELS_{rank}/{dataset}/{num_special_tokens}/",
+                "--instance_prompt", concept_prompt,
+                "--to_replace", to_replace,
+                "--replacement", replacement,
+                "--resolution", "1024",
+                "--rank", str(rank),
+                "--train_batch_size", "1",
+                "--gradient_accumulation_steps", "1",
+                "--num_special_tokens", str(num_special_tokens),
+                "--lr_warmup_steps", "0",
+                "--seed", "3407",
+                "--lr_scheduler", "constant",
+                "--pretrained_vae_model_name_or_path", "madebyollin/sdxl-vae-fp16-fix",
+                "--mixed_precision", "fp16",
+                "--validation_prompt", concept_prompt,
+                "--report_to", "wandb"
+            ] + stage
+            args = parse_args(input_args=input_args)
 
-    for checkpoint in ["checkpoint-1500", "checkpoint-3000", ""]:  # "checkpoint-500",
-        lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
-        _validation_prompts = [
-            (concept_prompt + " " + p).lower().replace(to_replace, replacement)
-            for p in validation_prompts
-        ]
-        try:
-            generate_lora_sdxl_images(
-                base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
-                lora_path=lora_path,
-                outputs_dir=str(result_dir / dataset / checkpoint),
-                prompts=_validation_prompts,
-                num_images=10,
-                num_inference_steps=30,
-                num_special_tokens=num_special_tokens
-            )
-        except Exception as e:
-            print(f"Inference error {e}")
-            traceback.print_exc()
+            try:
+                with wandb.init(config=vars(args)) as run:
+                    train(args)
+            except Exception as e:
+                print(f"Train error: {e}")
+                traceback.print_exc()
+
+        for checkpoint in ["checkpoint-1500", "checkpoint-3000", ""]:  # "checkpoint-500",
+            lora_path = f"MODELS_{rank}/{dataset}/{num_special_tokens}/{checkpoint}/pytorch_lora_weights.safetensors"
+            _validation_prompts = [
+                (concept_prompt + " " + p).lower().replace(to_replace, replacement)
+                for p in validation_prompts
+            ]
+            try:
+                generate_lora_sdxl_images(
+                    base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
+                    lora_path=lora_path,
+                    outputs_dir=str(result_dir / dataset / str(num_special_tokens) / checkpoint),
+                    prompts=_validation_prompts,
+                    num_images=10,
+                    num_inference_steps=30,
+                    num_special_tokens=num_special_tokens
+                )
+            except Exception as e:
+                print(f"Inference error {e}")
+                traceback.print_exc()
 
 
 #     html = f"<h1>{dataset}</h1>"

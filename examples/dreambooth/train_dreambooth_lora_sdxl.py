@@ -1125,6 +1125,17 @@ def main(args):
             text_encoder_2_state_dict, network_alphas=network_alphas, text_encoder=text_encoder_two_
         )
 
+        if args.num_special_tokens > 0:
+            print("loading special token embedding")
+            embedding_state_dict = {k: v for k, v in lora_state_dict.items()
+                                    if k == "text_encoder.special_token_embedding"}
+            text_encoder_one_.text_model.embeddings.load_state_dict(embedding_state_dict)
+
+            embedding2_state_dict = {k: v for k, v in lora_state_dict.items()
+                                     if k == "text_encoder_2.special_token_embedding"}
+            text_encoder_two_.text_model.embeddings.load_state_dict(embedding2_state_dict)
+
+
     accelerator.register_save_state_pre_hook(save_model_hook)
     accelerator.register_load_state_pre_hook(load_model_hook)
 
