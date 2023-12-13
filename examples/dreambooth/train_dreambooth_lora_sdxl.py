@@ -1474,6 +1474,11 @@ def main(args):
 
         for step, batch in enumerate(train_dataloader):
             with accelerator.accumulate(unet):
+                for g in optimizer.param_groups:
+                    print(g)
+                    print(g["lr"])
+
+
                 pixel_values = batch["pixel_values"].to(dtype=vae.dtype)
                 prompts = batch["prompts"]
 
