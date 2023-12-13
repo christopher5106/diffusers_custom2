@@ -1474,14 +1474,14 @@ def main(args):
 
         for step, batch in enumerate(train_dataloader):
             with accelerator.accumulate(unet):
-                if step < 200:
+                if step < 500:
                     optimizer.param_groups[0]["lr"] = 0
                     optimizer.param_groups[1]["lr"] = 0
                     optimizer.param_groups[2]["lr"] = 0
                     optimizer.param_groups[3]["lr"] = 1e-4
                     optimizer.param_groups[4]["lr"] = 1e-4
                 else:
-                    optimizer.param_groups[0]["lr"] = 0
+                    optimizer.param_groups[0]["lr"] = 1e-4
                     optimizer.param_groups[1]["lr"] = 1e-6
                     optimizer.param_groups[2]["lr"] = 1e-6
                     optimizer.param_groups[3]["lr"] = 1e-6
