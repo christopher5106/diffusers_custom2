@@ -1118,13 +1118,15 @@ def main(args):
 
         if args.num_special_tokens > 0:
             print("loading special token embedding")
-            embedding_state_dict = {k: v for k, v in lora_state_dict.items()
-                                    if k == "text_encoder.special_token_embedding"}
-            text_encoder_one_.text_model.embeddings.load_state_dict(embedding_state_dict)
+            embedding_state_dict = {
+                "special_token_embedding": lora_state_dict.items()["text_encoder.special_token_embedding"]
+            }
+            text_encoder_one_.text_model.embeddings.load_state_dict(embedding_state_dict, strict=False)
 
-            embedding2_state_dict = {k: v for k, v in lora_state_dict.items()
-                                     if k == "text_encoder_2.special_token_embedding"}
-            text_encoder_two_.text_model.embeddings.load_state_dict(embedding2_state_dict)
+            embedding2_state_dict = {
+                "special_token_embedding": lora_state_dict.items()["text_encoder_2.special_token_embedding"]
+            }
+            text_encoder_two_.text_model.embeddings.load_state_dict(embedding2_state_dict, strict=False)
             del lora_state_dict["text_encoder.special_token_embedding"]
             del lora_state_dict["text_encoder_2.special_token_embedding"]
 
