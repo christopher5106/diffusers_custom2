@@ -37,14 +37,19 @@ for test in tests:
 
         # for replacement in replacements:
 
-        for stage in [
-            [
+        stage1 = {
+            "name": "learning special token",
+            "params": [
                 "--learning_rate", "0",
                 "--text_encoder_lr", "0",
                 "--text_specialtoken_lr", "1e-4",
                 "--max_train_steps", "500"
-            ],
-            [
+            ]
+        }
+
+        stage2 = {
+            "name": "full training",
+            "params": [
                 "--train_text_encoder",
                 "--learning_rate", "1e-4",
                 "--text_encoder_lr", "1e-6",
@@ -52,7 +57,10 @@ for test in tests:
                 "--resume_from_checkpoint", f"MODELS_{rank}/{dataset}/{num_special_tokens}/",
                 "--max_train_steps", "3000",
             ]
-        ]:
+        }
+
+        for stage in [stage1, stage2]:
+            print(f">TRAINING STAGE: {stage['name']}")
             input_args = [
                 "--instance_data_dir", datasetpath,
                 "--pretrained_model_name_or_path", "stabilityai/stable-diffusion-xl-base-1.0",
@@ -72,7 +80,7 @@ for test in tests:
                 "--mixed_precision", "fp16",
                 "--validation_prompt", concept_prompt,
                 "--report_to", "wandb"
-            ] + stage
+            ] + stage["params"]
             args = parse_args(input_args=input_args)
 
             try:
