@@ -75,13 +75,10 @@ def generate_lora_sdxl_images(
     if num_special_tokens > 0:
         state_dict = load_special_token(model, lora_path, num_special_tokens)
         modify_tokenizers(model, num_special_tokens)
-        model.load_lora_weights(
-            state_dict,
-        )
+        model.load_lora_weights(state_dict)
     else:
-        model.load_lora_weights(
-            lora_path,
-        )  # beware, vscode points to LoraLoaderMixin instead of StableDiffusionXLLoraLoaderMixin
+        model.load_lora_weights(lora_path)
+        # beware, vscode points to LoraLoaderMixin instead of StableDiffusionXLLoraLoaderMixin
 
     # or model.unet.load_attn_procs(lora_path)
     logger.info("Moving model to GPU")

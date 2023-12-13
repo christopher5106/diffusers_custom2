@@ -9,9 +9,9 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
         self.subnet = clip_text_embeddings
         self.num_special_tokens = num_special_tokens
         embed_dim = self.subnet.token_embedding.embedding_dim  # 768, 1280 (for each encoder)
-        self.special_token_embedding = torch.nn.Parameter(
-            torch.zeros((1, num_special_tokens, embed_dim), dtype=torch.float32)
-        )
+        weights = torch.zeros((1, num_special_tokens, embed_dim), dtype=torch.float32)
+        # nn.init.xavier_normal_(weights)
+        self.special_token_embedding = torch.nn.Parameter(weights)
 
     def forward(
         self,
