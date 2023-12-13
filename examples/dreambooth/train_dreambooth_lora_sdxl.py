@@ -1475,7 +1475,7 @@ def main(args):
         for step, batch in enumerate(train_dataloader):
             with accelerator.accumulate(unet):
                 for g in optimizer.param_groups:
-                    print(g)
+                    # print(g)
                     print(g["lr"])
 
 
