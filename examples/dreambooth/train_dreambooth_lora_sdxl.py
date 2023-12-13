@@ -67,7 +67,7 @@ logger = get_logger(__name__)
 
 
 # TODO: This function should be removed once training scripts are rewritten in PEFT
-def text_encoder_lora_state_dict(text_encoder, train_special_token=False):
+def text_encoder_lora_state_dict(text_encoder, train_text_encoder, train_special_token=False):
     state_dict = {}
 
     def text_encoder_attn_modules(text_encoder):
@@ -83,18 +83,19 @@ def text_encoder_lora_state_dict(text_encoder, train_special_token=False):
 
         return attn_modules
 
-    for name, module in text_encoder_attn_modules(text_encoder):
-        for k, v in module.q_proj.lora_linear_layer.state_dict().items():
-            state_dict[f"{name}.q_proj.lora_linear_layer.{k}"] = v
+    if train_text_encoder:
+        for name, module in text_encoder_attn_modules(text_encoder):
+            for k, v in module.q_proj.lora_linear_layer.state_dict().items():
+                state_dict[f"{name}.q_proj.lora_linear_layer.{k}"] = v
 
-        for k, v in module.k_proj.lora_linear_layer.state_dict().items():
-            state_dict[f"{name}.k_proj.lora_linear_layer.{k}"] = v
+            for k, v in module.k_proj.lora_linear_layer.state_dict().items():
+                state_dict[f"{name}.k_proj.lora_linear_layer.{k}"] = v
 
-        for k, v in module.v_proj.lora_linear_layer.state_dict().items():
-            state_dict[f"{name}.v_proj.lora_linear_layer.{k}"] = v
+            for k, v in module.v_proj.lora_linear_layer.state_dict().items():
+                state_dict[f"{name}.v_proj.lora_linear_layer.{k}"] = v
 
-        for k, v in module.out_proj.lora_linear_layer.state_dict().items():
-            state_dict[f"{name}.out_proj.lora_linear_layer.{k}"] = v
+            for k, v in module.out_proj.lora_linear_layer.state_dict().items():
+                state_dict[f"{name}.out_proj.lora_linear_layer.{k}"] = v
 
     if train_special_token:
         state_dict["special_token_embedding"] = text_encoder.text_model.embeddings.state_dict()["special_token_embedding"]
@@ -1079,9 +1080,9 @@ def main(args):
                 if isinstance(model, type(accelerator.unwrap_model(unet))):
                     unet_lora_layers_to_save = unet_lora_state_dict(model)
                 elif isinstance(model, type(accelerator.unwrap_model(text_encoder_one))):
-                    text_encoder_one_lora_layers_to_save = text_encoder_lora_state_dict(model, args.num_special_tokens > 0)
+                    text_encoder_one_lora_layers_to_save = text_encoder_lora_state_dict(model, args.train_text_encoder, args.num_special_tokens > 0)
                 elif isinstance(model, type(accelerator.unwrap_model(text_encoder_two))):
-                    text_encoder_two_lora_layers_to_save = text_encoder_lora_state_dict(model, args.num_special_tokens > 0)
+                    text_encoder_two_lora_layers_to_save = text_encoder_lora_state_dict(model, args.train_text_encoder, args.num_special_tokens > 0)
                 else:
                     raise ValueError(f"unexpected save model: {model.__class__}")
 
@@ -1713,9 +1714,9 @@ def main(args):
 
         if args.train_text_encoder or args.num_special_tokens > 0:
             text_encoder_one = accelerator.unwrap_model(text_encoder_one)
-            text_encoder_lora_layers = text_encoder_lora_state_dict(text_encoder_one.to(torch.float32), args.num_special_tokens > 0)
+            text_encoder_lora_layers = text_encoder_lora_state_dict(text_encoder_one.to(torch.float32), args.train_text_encoder, args.num_special_tokens > 0)
             text_encoder_two = accelerator.unwrap_model(text_encoder_two)
-            text_encoder_2_lora_layers = text_encoder_lora_state_dict(text_encoder_two.to(torch.float32), args.num_special_tokens > 0)
+            text_encoder_2_lora_layers = text_encoder_lora_state_dict(text_encoder_two.to(torch.float32), args.train_text_encoder, args.num_special_tokens > 0)
         else:
             text_encoder_lora_layers = None
             text_encoder_2_lora_layers = None
