@@ -1367,350 +1367,379 @@ def main(args):
                 tokens_one = torch.cat([tokens_one, class_tokens_one], dim=0)
                 tokens_two = torch.cat([tokens_two, class_tokens_two], dim=0)
 
-    # Scheduler and math around the number of training steps.
-    overrode_max_train_steps = False
-    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
-    if args.max_train_steps is None:
-        args.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
-        overrode_max_train_steps = True
 
-    lr_scheduler = get_scheduler(
-        args.lr_scheduler,
-        optimizer=optimizer,
-        num_warmup_steps=args.lr_warmup_steps * accelerator.num_processes,
-        num_training_steps=args.max_train_steps * accelerator.num_processes,
-        num_cycles=args.lr_num_cycles,
-        power=args.lr_power,
-    )
 
-    # Prepare everything with our `accelerator`.
-    if args.train_text_encoder or args.num_special_tokens > 0:
-        unet, text_encoder_one, text_encoder_two, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
-            unet, text_encoder_one, text_encoder_two, optimizer, train_dataloader, lr_scheduler
-        )
-    else:
-        unet, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
-            unet, optimizer, train_dataloader, lr_scheduler
-        )
+    for stage in range(2):
+        print(f"TRAINING STZGE {stage}")
 
-    # We need to recalculate our total training steps as the size of the training dataloader may have changed.
-    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
-    if overrode_max_train_steps:
-        args.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
-    # Afterwards we recalculate our number of training epochs
-    args.num_train_epochs = math.ceil(args.max_train_steps / num_update_steps_per_epoch)
+        if stage == 0:
+            params_to_optimize[0]["lr"] = 0
+            params_to_optimize[1]["lr"] = 0
+            params_to_optimize[2]["lr"] = 0
+            params_to_optimize[3]["lr"] = 1e-4
+            params_to_optimize[4]["lr"] = 1e-4
+            args.max_train_steps = 500
 
-    # We need to initialize the trackers we use, and also store our configuration.
-    # The trackers initializes automatically on the main process.
-    if accelerator.is_main_process:
-        accelerator.init_trackers("dreambooth-lora-sd-xl", config=vars(args))
-
-    # Train!
-    total_batch_size = args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
-
-    logger.info("***** Running training *****")
-    logger.info(f"  Num examples = {len(train_dataset)}")
-    logger.info(f"  Num batches each epoch = {len(train_dataloader)}")
-    logger.info(f"  Num Epochs = {args.num_train_epochs}")
-    logger.info(f"  Instantaneous batch size per device = {args.train_batch_size}")
-    logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
-    logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
-    logger.info(f"  Total optimization steps = {args.max_train_steps}")
-    global_step = 0
-    first_epoch = 0
-
-    # Potentially load in the weights and states from a previous save
-    if args.resume_from_checkpoint:
-        if args.resume_from_checkpoint != "latest":
-            path = os.path.basename(args.resume_from_checkpoint)
         else:
-            # Get the mos recent checkpoint
-            dirs = os.listdir(args.output_dir)
-            dirs = [d for d in dirs if d.startswith("checkpoint")]
-            dirs = sorted(dirs, key=lambda x: int(x.split("-")[1]))
-            path = dirs[-1] if len(dirs) > 0 else None
+            params_to_optimize[0]["lr"] = 1e-4
+            params_to_optimize[1]["lr"] = 1e-6
+            params_to_optimize[2]["lr"] = 1e-6
+            params_to_optimize[3]["lr"] = 1e-6
+            params_to_optimize[4]["lr"] = 1e-6
+            args.max_train_steps = 3000
 
-        if path is None:
-            accelerator.print(
-                f"Checkpoint '{args.resume_from_checkpoint}' does not exist. Starting a new training run."
+        optimizer = optimizer_class(
+            params_to_optimize,
+            betas=(args.adam_beta1, args.adam_beta2),
+            weight_decay=args.adam_weight_decay,
+            eps=args.adam_epsilon,
+        )
+
+        # Scheduler and math around the number of training steps.
+        overrode_max_train_steps = False
+        num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
+        if args.max_train_steps is None:
+            args.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
+            overrode_max_train_steps = True
+
+        lr_scheduler = get_scheduler(
+            args.lr_scheduler,
+            optimizer=optimizer,
+            num_warmup_steps=args.lr_warmup_steps * accelerator.num_processes,
+            num_training_steps=args.max_train_steps * accelerator.num_processes,
+            num_cycles=args.lr_num_cycles,
+            power=args.lr_power,
+        )
+
+        # Prepare everything with our `accelerator`.
+        if args.train_text_encoder or args.num_special_tokens > 0:
+            unet, text_encoder_one, text_encoder_two, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
+                unet, text_encoder_one, text_encoder_two, optimizer, train_dataloader, lr_scheduler
             )
-            args.resume_from_checkpoint = None
-            initial_global_step = 0
         else:
-            accelerator.print(f"Resuming from checkpoint {path}")
-            accelerator.load_state(os.path.join(args.output_dir, path))
-            global_step = int(path.split("-")[1])
+            unet, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
+                unet, optimizer, train_dataloader, lr_scheduler
+            )
 
-            initial_global_step = global_step
-            first_epoch = global_step // num_update_steps_per_epoch
+        # We need to recalculate our total training steps as the size of the training dataloader may have changed.
+        num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
+        if overrode_max_train_steps:
+            args.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
+        # Afterwards we recalculate our number of training epochs
+        args.num_train_epochs = math.ceil(args.max_train_steps / num_update_steps_per_epoch)
 
-    else:
-        initial_global_step = 0
-
-    progress_bar = tqdm(
-        range(0, args.max_train_steps),
-        initial=initial_global_step,
-        desc="Steps",
-        # Only show the progress bar once on each machine.
-        disable=not accelerator.is_local_main_process,
-    )
-
-    for epoch in range(first_epoch, args.num_train_epochs):
-        unet.train()
-        if args.train_text_encoder:
-            text_encoder_one.train()
-            text_encoder_two.train()
-
-            # set top parameter requires_grad = True for gradient checkpointing works
-            text_encoder_one.text_model.embeddings.requires_grad_(True)
-            text_encoder_two.text_model.embeddings.requires_grad_(True)
-            if args.num_special_tokens > 0:
-                text_encoder_one.text_model.embeddings.subnet.requires_grad_(True)
-                text_encoder_two.text_model.embeddings.subnet.requires_grad_(True)
-
-        if args.num_special_tokens > 0:
-            text_encoder_one.text_model.embeddings.requires_grad_(True)
-            text_encoder_two.text_model.embeddings.requires_grad_(True)
-
-        for step, batch in enumerate(train_dataloader):
-            with accelerator.accumulate(unet):
-                pixel_values = batch["pixel_values"].to(dtype=vae.dtype)
-                prompts = batch["prompts"]
-
-                # encode batch prompts when custom prompts are provided for each image -
-                if train_dataset.custom_instance_prompts:
-                    if not args.train_text_encoder and args.num_special_tokens == 0:
-                        prompt_embeds, unet_add_text_embeds = compute_text_embeddings(
-                            prompts, text_encoders, tokenizers
-                        )
-                    else:
-                        tokens_one = tokenize_prompt(tokenizer_one, prompts)
-                        tokens_two = tokenize_prompt(tokenizer_two, prompts)
-
-                # Convert images to latent space
-                model_input = vae.encode(pixel_values).latent_dist.sample()
-                model_input = model_input * vae.config.scaling_factor
-                if args.pretrained_vae_model_name_or_path is None:
-                    model_input = model_input.to(weight_dtype)
-
-                # Sample noise that we'll add to the latents
-                noise = torch.randn_like(model_input)
-                bsz = model_input.shape[0]
-                # Sample a random timestep for each image
-                timesteps = torch.randint(
-                    0, noise_scheduler.config.num_train_timesteps, (bsz,), device=model_input.device
-                )
-                timesteps = timesteps.long()
-
-                # Add noise to the model input according to the noise magnitude at each timestep
-                # (this is the forward diffusion process)
-                noisy_model_input = noise_scheduler.add_noise(model_input, noise, timesteps)
-
-                # Calculate the elements to repeat depending on the use of prior-preservation and custom captions.
-                if not train_dataset.custom_instance_prompts:
-                    elems_to_repeat_text_embeds = bsz // 2 if args.with_prior_preservation else bsz
-                    elems_to_repeat_time_ids = bsz // 2 if args.with_prior_preservation else bsz
-                else:
-                    elems_to_repeat_text_embeds = 1
-                    elems_to_repeat_time_ids = bsz // 2 if args.with_prior_preservation else bsz
-
-                # Predict the noise residual
-                if not args.train_text_encoder and args.num_special_tokens == 0:
-                    unet_added_conditions = {
-                        "time_ids": add_time_ids.repeat(elems_to_repeat_time_ids, 1),
-                        "text_embeds": unet_add_text_embeds.repeat(elems_to_repeat_text_embeds, 1),
-                    }
-                    prompt_embeds_input = prompt_embeds.repeat(elems_to_repeat_text_embeds, 1, 1)
-                    model_pred = unet(
-                        noisy_model_input,
-                        timesteps,
-                        prompt_embeds_input,
-                        added_cond_kwargs=unet_added_conditions,
-                    ).sample
-                else:
-                    unet_added_conditions = {"time_ids": add_time_ids.repeat(elems_to_repeat_time_ids, 1)}
-                    prompt_embeds, pooled_prompt_embeds = encode_prompt(
-                        text_encoders=[text_encoder_one, text_encoder_two],
-                        tokenizers=None,
-                        prompt=None,
-                        text_input_ids_list=[tokens_one, tokens_two],
-                        num_special_tokens=args.num_special_tokens
-                    )
-                    unet_added_conditions.update(
-                        {"text_embeds": pooled_prompt_embeds.repeat(elems_to_repeat_text_embeds, 1)}
-                    )
-                    prompt_embeds_input = prompt_embeds.repeat(elems_to_repeat_text_embeds, 1, 1)
-                    model_pred = unet(
-                        noisy_model_input, timesteps, prompt_embeds_input, added_cond_kwargs=unet_added_conditions
-                    ).sample
-
-                # Get the target for loss depending on the prediction type
-                if noise_scheduler.config.prediction_type == "epsilon":
-                    target = noise
-                elif noise_scheduler.config.prediction_type == "v_prediction":
-                    target = noise_scheduler.get_velocity(model_input, noise, timesteps)
-                else:
-                    raise ValueError(f"Unknown prediction type {noise_scheduler.config.prediction_type}")
-
-                if args.with_prior_preservation:
-                    # Chunk the noise and model_pred into two parts and compute the loss on each part separately.
-                    model_pred, model_pred_prior = torch.chunk(model_pred, 2, dim=0)
-                    target, target_prior = torch.chunk(target, 2, dim=0)
-
-                    # Compute prior loss
-                    prior_loss = F.mse_loss(model_pred_prior.float(), target_prior.float(), reduction="mean")
-
-                if args.snr_gamma is None:
-                    loss = F.mse_loss(model_pred.float(), target.float(), reduction="mean")
-                else:
-                    # Compute loss-weights as per Section 3.4 of https://arxiv.org/abs/2303.09556.
-                    # Since we predict the noise instead of x_0, the original formulation is slightly changed.
-                    # This is discussed in Section 4.2 of the same paper.
-                    snr = compute_snr(noise_scheduler, timesteps)
-                    base_weight = (
-                        torch.stack([snr, args.snr_gamma * torch.ones_like(timesteps)], dim=1).min(dim=1)[0] / snr
-                    )
-
-                    if noise_scheduler.config.prediction_type == "v_prediction":
-                        # Velocity objective needs to be floored to an SNR weight of one.
-                        mse_loss_weights = base_weight + 1
-                    else:
-                        # Epsilon and sample both use the same loss weights.
-                        mse_loss_weights = base_weight
-
-                    loss = F.mse_loss(model_pred.float(), target.float(), reduction="none")
-                    loss = loss.mean(dim=list(range(1, len(loss.shape)))) * mse_loss_weights
-                    loss = loss.mean()
-
-                if args.with_prior_preservation:
-                    # Add the prior loss to the instance loss.
-                    loss = loss + args.prior_loss_weight * prior_loss
-
-                accelerator.backward(loss)
-                if accelerator.sync_gradients:
-                    params_to_clip = (
-                        itertools.chain(unet_lora_parameters, text_lora_parameters_one, text_lora_parameters_two)
-                        if args.train_text_encoder
-                        else unet_lora_parameters
-                    )
-                    accelerator.clip_grad_norm_(params_to_clip, args.max_grad_norm)
-                optimizer.step()
-                lr_scheduler.step()
-                optimizer.zero_grad()
-
-            # Checks if the accelerator has performed an optimization step behind the scenes
-            if accelerator.sync_gradients:
-                progress_bar.update(1)
-                global_step += 1
-
-                if accelerator.is_main_process:
-                    if global_step % args.checkpointing_steps == 0:
-                        # _before_ saving state, check if this save would set us over the `checkpoints_total_limit`
-                        if args.checkpoints_total_limit is not None:
-                            checkpoints = os.listdir(args.output_dir)
-                            checkpoints = [d for d in checkpoints if d.startswith("checkpoint")]
-                            checkpoints = sorted(checkpoints, key=lambda x: int(x.split("-")[1]))
-
-                            # before we save the new checkpoint, we need to have at _most_ `checkpoints_total_limit - 1` checkpoints
-                            if len(checkpoints) >= args.checkpoints_total_limit:
-                                num_to_remove = len(checkpoints) - args.checkpoints_total_limit + 1
-                                removing_checkpoints = checkpoints[0:num_to_remove]
-
-                                logger.info(
-                                    f"{len(checkpoints)} checkpoints already exist, removing {len(removing_checkpoints)} checkpoints"
-                                )
-                                logger.info(f"removing checkpoints: {', '.join(removing_checkpoints)}")
-
-                                for removing_checkpoint in removing_checkpoints:
-                                    removing_checkpoint = os.path.join(args.output_dir, removing_checkpoint)
-                                    shutil.rmtree(removing_checkpoint)
-
-                        save_path = os.path.join(args.output_dir, f"checkpoint-{global_step}")
-                        accelerator.save_state(save_path)
-                        logger.info(f"Saved state to {save_path}")
-
-            logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
-            progress_bar.set_postfix(**logs)
-            accelerator.log(logs, step=global_step)
-
-            if global_step >= args.max_train_steps:
-                break
-
+        # We need to initialize the trackers we use, and also store our configuration.
+        # The trackers initializes automatically on the main process.
         if accelerator.is_main_process:
-            if args.validation_prompt is not None and epoch % args.validation_epochs == 0:
-                logger.info(
-                    f"Running validation... \n Generating {args.num_validation_images} images with prompt:"
-                    f" {args.validation_prompt}."
+            accelerator.init_trackers("dreambooth-lora-sd-xl", config=vars(args))
+
+        # Train!
+        total_batch_size = args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
+
+        logger.info("***** Running training *****")
+        logger.info(f"  Num examples = {len(train_dataset)}")
+        logger.info(f"  Num batches each epoch = {len(train_dataloader)}")
+        logger.info(f"  Num Epochs = {args.num_train_epochs}")
+        logger.info(f"  Instantaneous batch size per device = {args.train_batch_size}")
+        logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
+        logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
+        logger.info(f"  Total optimization steps = {args.max_train_steps}")
+        global_step = 0
+        first_epoch = 0
+
+        # Potentially load in the weights and states from a previous save
+        if args.resume_from_checkpoint:
+            if args.resume_from_checkpoint != "latest":
+                path = os.path.basename(args.resume_from_checkpoint)
+            else:
+                # Get the mos recent checkpoint
+                dirs = os.listdir(args.output_dir)
+                dirs = [d for d in dirs if d.startswith("checkpoint")]
+                dirs = sorted(dirs, key=lambda x: int(x.split("-")[1]))
+                path = dirs[-1] if len(dirs) > 0 else None
+
+            if path is None:
+                accelerator.print(
+                    f"Checkpoint '{args.resume_from_checkpoint}' does not exist. Starting a new training run."
                 )
-                # create pipeline
-                if not args.train_text_encoder and args.num_special_tokens == 0:
-                    text_encoder_one = text_encoder_cls_one.from_pretrained(
-                        args.pretrained_model_name_or_path,
-                        subfolder="text_encoder",
-                        revision=args.revision,
-                        variant=args.variant,
+                args.resume_from_checkpoint = None
+                initial_global_step = 0
+            else:
+                accelerator.print(f"Resuming from checkpoint {path}")
+                accelerator.load_state(os.path.join(args.output_dir, path))
+                global_step = int(path.split("-")[1])
+
+                initial_global_step = global_step
+                first_epoch = global_step // num_update_steps_per_epoch
+
+        else:
+            initial_global_step = 0
+
+        progress_bar = tqdm(
+            range(0, args.max_train_steps),
+            initial=initial_global_step,
+            desc="Steps",
+            # Only show the progress bar once on each machine.
+            disable=not accelerator.is_local_main_process,
+        )
+
+        ####### START TRAINING LOOP
+        for epoch in range(first_epoch, args.num_train_epochs):
+            unet.train()
+            if args.train_text_encoder:
+                text_encoder_one.train()
+                text_encoder_two.train()
+
+                # set top parameter requires_grad = True for gradient checkpointing works
+                text_encoder_one.text_model.embeddings.requires_grad_(True)
+                text_encoder_two.text_model.embeddings.requires_grad_(True)
+                if args.num_special_tokens > 0:
+                    text_encoder_one.text_model.embeddings.subnet.requires_grad_(True)
+                    text_encoder_two.text_model.embeddings.subnet.requires_grad_(True)
+
+            if args.num_special_tokens > 0:
+                text_encoder_one.text_model.embeddings.requires_grad_(True)
+                text_encoder_two.text_model.embeddings.requires_grad_(True)
+
+            for step, batch in enumerate(train_dataloader):
+                with accelerator.accumulate(unet):
+                    pixel_values = batch["pixel_values"].to(dtype=vae.dtype)
+                    prompts = batch["prompts"]
+
+                    # encode batch prompts when custom prompts are provided for each image -
+                    if train_dataset.custom_instance_prompts:
+                        if not args.train_text_encoder and args.num_special_tokens == 0:
+                            prompt_embeds, unet_add_text_embeds = compute_text_embeddings(
+                                prompts, text_encoders, tokenizers
+                            )
+                        else:
+                            tokens_one = tokenize_prompt(tokenizer_one, prompts)
+                            tokens_two = tokenize_prompt(tokenizer_two, prompts)
+
+                    # Convert images to latent space
+                    model_input = vae.encode(pixel_values).latent_dist.sample()
+                    model_input = model_input * vae.config.scaling_factor
+                    if args.pretrained_vae_model_name_or_path is None:
+                        model_input = model_input.to(weight_dtype)
+
+                    # Sample noise that we'll add to the latents
+                    noise = torch.randn_like(model_input)
+                    bsz = model_input.shape[0]
+                    # Sample a random timestep for each image
+                    timesteps = torch.randint(
+                        0, noise_scheduler.config.num_train_timesteps, (bsz,), device=model_input.device
                     )
-                    text_encoder_two = text_encoder_cls_two.from_pretrained(
-                        args.pretrained_model_name_or_path,
-                        subfolder="text_encoder_2",
-                        revision=args.revision,
-                        variant=args.variant,
-                    )
-                pipeline = StableDiffusionXLPipeline.from_pretrained(
-                    args.pretrained_model_name_or_path,
-                    vae=vae,
-                    text_encoder=accelerator.unwrap_model(text_encoder_one),
-                    text_encoder_2=accelerator.unwrap_model(text_encoder_two),
-                    unet=accelerator.unwrap_model(unet),
-                    revision=args.revision,
-                    variant=args.variant,
-                    torch_dtype=weight_dtype,
-                )
+                    timesteps = timesteps.long()
 
-                # We train on the simplified learning objective. If we were previously predicting a variance, we need the scheduler to ignore it
-                scheduler_args = {}
+                    # Add noise to the model input according to the noise magnitude at each timestep
+                    # (this is the forward diffusion process)
+                    noisy_model_input = noise_scheduler.add_noise(model_input, noise, timesteps)
 
-                if "variance_type" in pipeline.scheduler.config:
-                    variance_type = pipeline.scheduler.config.variance_type
+                    # Calculate the elements to repeat depending on the use of prior-preservation and custom captions.
+                    if not train_dataset.custom_instance_prompts:
+                        elems_to_repeat_text_embeds = bsz // 2 if args.with_prior_preservation else bsz
+                        elems_to_repeat_time_ids = bsz // 2 if args.with_prior_preservation else bsz
+                    else:
+                        elems_to_repeat_text_embeds = 1
+                        elems_to_repeat_time_ids = bsz // 2 if args.with_prior_preservation else bsz
 
-                    if variance_type in ["learned", "learned_range"]:
-                        variance_type = "fixed_small"
+                    # Predict the noise residual
+                    if not args.train_text_encoder and args.num_special_tokens == 0:
+                        unet_added_conditions = {
+                            "time_ids": add_time_ids.repeat(elems_to_repeat_time_ids, 1),
+                            "text_embeds": unet_add_text_embeds.repeat(elems_to_repeat_text_embeds, 1),
+                        }
+                        prompt_embeds_input = prompt_embeds.repeat(elems_to_repeat_text_embeds, 1, 1)
+                        model_pred = unet(
+                            noisy_model_input,
+                            timesteps,
+                            prompt_embeds_input,
+                            added_cond_kwargs=unet_added_conditions,
+                        ).sample
+                    else:
+                        unet_added_conditions = {"time_ids": add_time_ids.repeat(elems_to_repeat_time_ids, 1)}
+                        prompt_embeds, pooled_prompt_embeds = encode_prompt(
+                            text_encoders=[text_encoder_one, text_encoder_two],
+                            tokenizers=None,
+                            prompt=None,
+                            text_input_ids_list=[tokens_one, tokens_two],
+                            num_special_tokens=args.num_special_tokens
+                        )
+                        unet_added_conditions.update(
+                            {"text_embeds": pooled_prompt_embeds.repeat(elems_to_repeat_text_embeds, 1)}
+                        )
+                        prompt_embeds_input = prompt_embeds.repeat(elems_to_repeat_text_embeds, 1, 1)
+                        model_pred = unet(
+                            noisy_model_input, timesteps, prompt_embeds_input, added_cond_kwargs=unet_added_conditions
+                        ).sample
 
-                    scheduler_args["variance_type"] = variance_type
+                    # Get the target for loss depending on the prediction type
+                    if noise_scheduler.config.prediction_type == "epsilon":
+                        target = noise
+                    elif noise_scheduler.config.prediction_type == "v_prediction":
+                        target = noise_scheduler.get_velocity(model_input, noise, timesteps)
+                    else:
+                        raise ValueError(f"Unknown prediction type {noise_scheduler.config.prediction_type}")
 
-                pipeline.scheduler = DPMSolverMultistepScheduler.from_config(
-                    pipeline.scheduler.config, **scheduler_args
-                )
+                    if args.with_prior_preservation:
+                        # Chunk the noise and model_pred into two parts and compute the loss on each part separately.
+                        model_pred, model_pred_prior = torch.chunk(model_pred, 2, dim=0)
+                        target, target_prior = torch.chunk(target, 2, dim=0)
 
-                pipeline = pipeline.to(accelerator.device)
-                pipeline.set_progress_bar_config(disable=True)
+                        # Compute prior loss
+                        prior_loss = F.mse_loss(model_pred_prior.float(), target_prior.float(), reduction="mean")
 
-                # run inference
-                generator = torch.Generator(device=accelerator.device).manual_seed(args.seed) if args.seed else None
-                pipeline_args = {"prompt": args.validation_prompt}
-
-                with torch.cuda.amp.autocast():
-                    images = [
-                        pipeline(**pipeline_args, generator=generator).images[0]
-                        for _ in range(args.num_validation_images)
-                    ]
-
-                for tracker in accelerator.trackers:
-                    if tracker.name == "tensorboard":
-                        np_images = np.stack([np.asarray(img) for img in images])
-                        tracker.writer.add_images("validation", np_images, epoch, dataformats="NHWC")
-                    if tracker.name == "wandb":
-                        tracker.log(
-                            {
-                                "validation": [
-                                    wandb.Image(image, caption=f"{i}: {args.validation_prompt}")
-                                    for i, image in enumerate(images)
-                                ]
-                            }
+                    if args.snr_gamma is None:
+                        loss = F.mse_loss(model_pred.float(), target.float(), reduction="mean")
+                    else:
+                        # Compute loss-weights as per Section 3.4 of https://arxiv.org/abs/2303.09556.
+                        # Since we predict the noise instead of x_0, the original formulation is slightly changed.
+                        # This is discussed in Section 4.2 of the same paper.
+                        snr = compute_snr(noise_scheduler, timesteps)
+                        base_weight = (
+                            torch.stack([snr, args.snr_gamma * torch.ones_like(timesteps)], dim=1).min(dim=1)[0] / snr
                         )
 
-                del pipeline
-                torch.cuda.empty_cache()
+                        if noise_scheduler.config.prediction_type == "v_prediction":
+                            # Velocity objective needs to be floored to an SNR weight of one.
+                            mse_loss_weights = base_weight + 1
+                        else:
+                            # Epsilon and sample both use the same loss weights.
+                            mse_loss_weights = base_weight
+
+                        loss = F.mse_loss(model_pred.float(), target.float(), reduction="none")
+                        loss = loss.mean(dim=list(range(1, len(loss.shape)))) * mse_loss_weights
+                        loss = loss.mean()
+
+                    if args.with_prior_preservation:
+                        # Add the prior loss to the instance loss.
+                        loss = loss + args.prior_loss_weight * prior_loss
+
+                    accelerator.backward(loss)
+                    if accelerator.sync_gradients:
+                        params_to_clip = (
+                            itertools.chain(unet_lora_parameters, text_lora_parameters_one, text_lora_parameters_two)
+                            if args.train_text_encoder
+                            else unet_lora_parameters
+                        )
+                        accelerator.clip_grad_norm_(params_to_clip, args.max_grad_norm)
+                    optimizer.step()
+                    lr_scheduler.step()
+                    optimizer.zero_grad()
+
+                # Checks if the accelerator has performed an optimization step behind the scenes
+                if accelerator.sync_gradients:
+                    progress_bar.update(1)
+                    global_step += 1
+
+                    if accelerator.is_main_process:
+                        if global_step % args.checkpointing_steps == 0:
+                            # _before_ saving state, check if this save would set us over the `checkpoints_total_limit`
+                            if args.checkpoints_total_limit is not None:
+                                checkpoints = os.listdir(args.output_dir)
+                                checkpoints = [d for d in checkpoints if d.startswith("checkpoint")]
+                                checkpoints = sorted(checkpoints, key=lambda x: int(x.split("-")[1]))
+
+                                # before we save the new checkpoint, we need to have at _most_ `checkpoints_total_limit - 1` checkpoints
+                                if len(checkpoints) >= args.checkpoints_total_limit:
+                                    num_to_remove = len(checkpoints) - args.checkpoints_total_limit + 1
+                                    removing_checkpoints = checkpoints[0:num_to_remove]
+
+                                    logger.info(
+                                        f"{len(checkpoints)} checkpoints already exist, removing {len(removing_checkpoints)} checkpoints"
+                                    )
+                                    logger.info(f"removing checkpoints: {', '.join(removing_checkpoints)}")
+
+                                    for removing_checkpoint in removing_checkpoints:
+                                        removing_checkpoint = os.path.join(args.output_dir, removing_checkpoint)
+                                        shutil.rmtree(removing_checkpoint)
+
+                            save_path = os.path.join(args.output_dir, f"checkpoint-{global_step}")
+                            accelerator.save_state(save_path)
+                            logger.info(f"Saved state to {save_path}")
+
+                logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
+                progress_bar.set_postfix(**logs)
+                accelerator.log(logs, step=global_step)
+
+                if global_step >= args.max_train_steps:
+                    break
+
+            if accelerator.is_main_process:
+                if args.validation_prompt is not None and epoch % args.validation_epochs == 0:
+                    logger.info(
+                        f"Running validation... \n Generating {args.num_validation_images} images with prompt:"
+                        f" {args.validation_prompt}."
+                    )
+                    # create pipeline
+                    if not args.train_text_encoder and args.num_special_tokens == 0:
+                        text_encoder_one = text_encoder_cls_one.from_pretrained(
+                            args.pretrained_model_name_or_path,
+                            subfolder="text_encoder",
+                            revision=args.revision,
+                            variant=args.variant,
+                        )
+                        text_encoder_two = text_encoder_cls_two.from_pretrained(
+                            args.pretrained_model_name_or_path,
+                            subfolder="text_encoder_2",
+                            revision=args.revision,
+                            variant=args.variant,
+                        )
+                    pipeline = StableDiffusionXLPipeline.from_pretrained(
+                        args.pretrained_model_name_or_path,
+                        vae=vae,
+                        text_encoder=accelerator.unwrap_model(text_encoder_one),
+                        text_encoder_2=accelerator.unwrap_model(text_encoder_two),
+                        unet=accelerator.unwrap_model(unet),
+                        revision=args.revision,
+                        variant=args.variant,
+                        torch_dtype=weight_dtype,
+                    )
+
+                    # We train on the simplified learning objective. If we were previously predicting a variance, we need the scheduler to ignore it
+                    scheduler_args = {}
+
+                    if "variance_type" in pipeline.scheduler.config:
+                        variance_type = pipeline.scheduler.config.variance_type
+
+                        if variance_type in ["learned", "learned_range"]:
+                            variance_type = "fixed_small"
+
+                        scheduler_args["variance_type"] = variance_type
+
+                    pipeline.scheduler = DPMSolverMultistepScheduler.from_config(
+                        pipeline.scheduler.config, **scheduler_args
+                    )
+
+                    pipeline = pipeline.to(accelerator.device)
+                    pipeline.set_progress_bar_config(disable=True)
+
+                    # run inference
+                    generator = torch.Generator(device=accelerator.device).manual_seed(args.seed) if args.seed else None
+                    pipeline_args = {"prompt": args.validation_prompt}
+
+                    with torch.cuda.amp.autocast():
+                        images = [
+                            pipeline(**pipeline_args, generator=generator).images[0]
+                            for _ in range(args.num_validation_images)
+                        ]
+
+                    for tracker in accelerator.trackers:
+                        if tracker.name == "tensorboard":
+                            np_images = np.stack([np.asarray(img) for img in images])
+                            tracker.writer.add_images("validation", np_images, epoch, dataformats="NHWC")
+                        if tracker.name == "wandb":
+                            tracker.log(
+                                {
+                                    "validation": [
+                                        wandb.Image(image, caption=f"{i}: {args.validation_prompt}")
+                                        for i, image in enumerate(images)
+                                    ]
+                                }
+                            )
+
+                    del pipeline
+                    torch.cuda.empty_cache()
 
     # Save the lora layers
     accelerator.wait_for_everyone()
