@@ -1644,9 +1644,9 @@ def main(args):
 
                 for group in optimizer.param_groups:
                     group.setdefault('initial_lr', group['lr'])
-                lr_scheduler.base_lrs = [group['initial_lr'] for group in optimizer.param_groups]
-                lr_scheduler.last_epoch = -1
-                lr_scheduler._initial_step()
+                lr_scheduler.scheduler.base_lrs = [group['initial_lr'] for group in optimizer.param_groups]
+                lr_scheduler.scheduler.last_epoch = -1
+                lr_scheduler.scheduler._initial_step()
 
             if global_step >= args.max_train_steps:
                 break
