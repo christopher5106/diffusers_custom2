@@ -59,6 +59,7 @@ for test in tests:
              "--learning_rate", "1e-4",
              "--text_encoder_lr", "1e-6",
              "--text_specialtoken_lr", "1e-6",
+            "--max_train_steps", "3500"
         ]
         args = parse_args(input_args=input_args)
 

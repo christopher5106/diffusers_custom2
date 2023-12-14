@@ -1634,7 +1634,7 @@ def main(args):
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
 
-            if global_step == 5:
+            if global_step == 500:
                 print("CHANGING LR" * 100)
                 optimizer.param_groups[0]["lr"] = 1e-4
                 optimizer.param_groups[1]["lr"] = 1e-6
