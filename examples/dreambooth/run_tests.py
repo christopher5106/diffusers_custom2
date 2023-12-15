@@ -53,7 +53,7 @@ for test in tests:
         "--learning_rate", "1e-4",
         "--num_special_tokens", str(num_special_tokens),
         "--text_specialtoken_lr", "1e-4",
-        "--text_encoder_lr", "0.1",
+        "--text_encoder_lr", "1e-6",
         "--lr_warmup_steps", "0",
         "--max_train_steps", f"{num_steps}",
         "--seed", "3407",
