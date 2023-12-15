@@ -1158,7 +1158,7 @@ def main(args):
         )
 
     # Optimization parameters
-    unet_lora_parameters_with_lr = {"params": unet_lora_parameters, "lr": 0 } #args.learning_rate}
+    unet_lora_parameters_with_lr = {"params": unet_lora_parameters, "lr": args.learning_rate}
     params_to_optimize = [unet_lora_parameters_with_lr]
 
     if args.train_text_encoder:
@@ -1166,12 +1166,12 @@ def main(args):
         text_lora_parameters_one_with_lr = {
             "params": text_lora_parameters_one,
             "weight_decay": args.adam_weight_decay_text_encoder,
-            "lr": 0  # args.text_encoder_lr if args.text_encoder_lr else args.learning_rate,
+            "lr": args.text_encoder_lr if args.text_encoder_lr else args.learning_rate,
         }
         text_lora_parameters_two_with_lr = {
             "params": text_lora_parameters_two,
             "weight_decay": args.adam_weight_decay_text_encoder,
-            "lr": 0  # args.text_encoder_lr if args.text_encoder_lr else args.learning_rate,
+            "lr": args.text_encoder_lr if args.text_encoder_lr else args.learning_rate,
         }
         params_to_optimize.append(text_lora_parameters_one_with_lr)
         params_to_optimize.append(text_lora_parameters_two_with_lr)
@@ -1180,13 +1180,13 @@ def main(args):
         text_specialtoken_parameters_one_with_lr = {
             "params": text_specialtoken_parameters_one,
             "weight_decay": args.adam_weight_decay_text_specialtoken,
-            "lr": 1e-4  # args.text_specialtoken_lr if args.text_specialtoken_lr else args.learning_rate,
+            "lr": args.text_specialtoken_lr if args.text_specialtoken_lr else args.learning_rate,
         }
         params_to_optimize.append(text_specialtoken_parameters_one_with_lr)
         text_specialtoken_parameters_two_with_lr = {
             "params": text_specialtoken_parameters_two,
             "weight_decay": args.adam_weight_decay_text_specialtoken,
-            "lr": 1e-4  # args.text_specialtoken_lr if args.text_specialtoken_lr else args.learning_rate,
+            "lr": args.text_specialtoken_lr if args.text_specialtoken_lr else args.learning_rate,
         }
         params_to_optimize.append(text_specialtoken_parameters_two_with_lr)
 
@@ -1634,19 +1634,19 @@ def main(args):
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
 
-            if global_step == 500:
-                print("CHANGING LR" * 100)
-                optimizer.param_groups[0]["lr"] = 1e-4
-                optimizer.param_groups[1]["lr"] = 1e-6
-                optimizer.param_groups[2]["lr"] = 1e-6
-                optimizer.param_groups[3]["lr"] = 1e-6
-                optimizer.param_groups[4]["lr"] = 1e-6
-
-                for group in optimizer.param_groups:
-                    group.setdefault('initial_lr', group['lr'])
-                lr_scheduler.scheduler.base_lrs = [group['initial_lr'] for group in optimizer.param_groups]
-                lr_scheduler.scheduler.last_epoch = -1
-                lr_scheduler.scheduler._initial_step()
+            # if global_step == 500:
+            #     print("CHANGING LR" * 100)
+            #     optimizer.param_groups[0]["lr"] = 1e-4
+            #     optimizer.param_groups[1]["lr"] = 1e-6
+            #     optimizer.param_groups[2]["lr"] = 1e-6
+            #     optimizer.param_groups[3]["lr"] = 1e-6
+            #     optimizer.param_groups[4]["lr"] = 1e-6
+            #
+            #     for group in optimizer.param_groups:
+            #         group.setdefault('initial_lr', group['lr'])
+            #     lr_scheduler.scheduler.base_lrs = [group['initial_lr'] for group in optimizer.param_groups]
+            #     lr_scheduler.scheduler.last_epoch = -1
+            #     lr_scheduler.scheduler._initial_step()
 
             if global_step >= args.max_train_steps:
                 break
