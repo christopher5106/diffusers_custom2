@@ -60,6 +60,7 @@ def add_unique_code(text_encoder):
 
     unique_code = torch.full(token_embedding.shape, -.2)
     unique_code[:, :, int(embed_dim/2):] = .2
+    unique_code.to(token_embedding.device)
 
     text_encoder.text_model.embeddings.special_token_embedding.data += unique_code
 
