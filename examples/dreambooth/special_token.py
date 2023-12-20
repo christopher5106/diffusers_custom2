@@ -62,7 +62,16 @@ def add_unique_code(text_encoder):
     unique_code[:, :, int(embed_dim/2):] = .2
     unique_code = unique_code.to(token_embedding.device)
 
-    text_encoder.text_model.embeddings.special_token_embedding.data += unique_code
+    token_embedding.data += unique_code
+
+
+def reset_embedding(text_encoder):
+    token_embedding = text_encoder.text_model.embeddings.special_token_embedding
+
+    weights = torch.zeros(token_embedding.shape, dtype=torch.float32)
+    weights = weights.to(token_embedding.device)
+
+    token_embedding.data = weights
 
 class CLIPTokenizerModified(CLIPTokenizer):
     @classmethod
