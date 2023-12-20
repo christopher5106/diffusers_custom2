@@ -54,6 +54,15 @@ def load_special_token(model, lora_path, num_special_tokens):
     return state_dict
 
 
+def add_unique_code(text_encoder):
+    token_embedding = text_encoder.text_model.embeddings.special_token_embedding
+    _, num_special_tokens, embed_dim = token_embedding.shape
+
+    unique_code = torch.full(token_embedding.shape, -.2)
+    unique_code[:, :, int(embed_dim/2):] = .2
+
+    text_encoder.text_model.embeddings.special_token_embedding.data += unique_code
+
 class CLIPTokenizerModified(CLIPTokenizer):
     @classmethod
     def cast(cls, tokenizer: CLIPTokenizer, num_special_tokens):

@@ -58,7 +58,7 @@ from diffusers.utils.import_utils import is_xformers_available
 
 from typing import Optional
 
-from special_token import load_special_token, add_special_token
+from special_token import load_special_token, add_special_token, add_unique_code
 
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
 check_min_version("0.24.0.dev0")
@@ -1623,8 +1623,11 @@ def main(args):
                 optimizer.param_groups[0]["lr"] = 1e-4
                 optimizer.param_groups[1]["lr"] = 1e-6
                 optimizer.param_groups[2]["lr"] = 1e-6
-                optimizer.param_groups[3]["lr"] = 1e-6
-                optimizer.param_groups[4]["lr"] = 1e-6
+                optimizer.param_groups[3]["lr"] = 0
+                optimizer.param_groups[4]["lr"] = 0
+
+                add_unique_code(text_encoder_one)
+                add_unique_code(text_encoder_two)
 
                 for group in optimizer.param_groups:
                     group.setdefault('initial_lr', group['lr'])
