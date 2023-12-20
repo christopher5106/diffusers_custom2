@@ -1620,22 +1620,44 @@ def main(args):
             # christopher
             if global_step == 500:
                 print("CHANGING LR" * 100)
-                optimizer.param_groups[0]["lr"] = 1e-4
-                optimizer.param_groups[1]["lr"] = 1e-6
-                optimizer.param_groups[2]["lr"] = 1e-6
-                optimizer.param_groups[3]["lr"] = 0
-                optimizer.param_groups[4]["lr"] = 0
+                params_to_optimize[0]["lr"] = 1e-4
+                params_to_optimize[1]["lr"] = 1e-6
+                params_to_optimize[2]["lr"] = 1e-6
+                params_to_optimize[3]["lr"] = 0
+                params_to_optimize[4]["lr"] = 0
 
-                # add_unique_code(text_encoder_one)
-                # add_unique_code(text_encoder_two)
-                reset_embedding(text_encoder_one)
-                reset_embedding(text_encoder_two)
+                optimizer = optimizer_class(
+                    params_to_optimize,
+                    betas=(args.adam_beta1, args.adam_beta2),
+                    weight_decay=args.adam_weight_decay,
+                    eps=args.adam_epsilon,
+                )
+                lr_scheduler = get_scheduler(
+                    args.lr_scheduler,
+                    optimizer=optimizer,
+                    num_warmup_steps=args.lr_warmup_steps * accelerator.num_processes,
+                    num_training_steps=args.max_train_steps * accelerator.num_processes,
+                    num_cycles=args.lr_num_cycles,
+                    power=args.lr_power,
+                )
 
-                for group in optimizer.param_groups:
-                    group.setdefault('initial_lr', group['lr'])
-                lr_scheduler.scheduler.base_lrs = [group['initial_lr'] for group in optimizer.param_groups]
-                lr_scheduler.scheduler.last_epoch = -1
-                lr_scheduler.scheduler._initial_step()
+                optimizer, lr_scheduler = accelerator.prepare(optimizer, lr_scheduler)
+                # optimizer.param_groups[0]["lr"] = 1e-4
+                # optimizer.param_groups[1]["lr"] = 1e-6
+                # optimizer.param_groups[2]["lr"] = 1e-6
+                # optimizer.param_groups[3]["lr"] = 0
+                # optimizer.param_groups[4]["lr"] = 0
+
+                # # add_unique_code(text_encoder_one)
+                # # add_unique_code(text_encoder_two)
+                # reset_embedding(text_encoder_one)
+                # reset_embedding(text_encoder_two)
+                #
+                # # for group in optimizer.param_groups:
+                # #     group.setdefault('initial_lr', group['lr'])
+                # # lr_scheduler.scheduler.base_lrs = [group['initial_lr'] for group in optimizer.param_groups]
+                # # lr_scheduler.scheduler.last_epoch = -1
+                # # lr_scheduler.scheduler._initial_step()
 
         if accelerator.is_main_process:
             if args.validation_prompt is not None and epoch % args.validation_epochs == 0:
