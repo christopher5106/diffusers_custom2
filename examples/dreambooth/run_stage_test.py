@@ -3,6 +3,7 @@ import traceback
 import json
 from pathlib import Path
 import wandb
+import torch
 
 from train_dreambooth_lora_sdxl import main as train
 from train_dreambooth_lora_sdxl import parse_args
@@ -18,7 +19,7 @@ num_special_tokens = 3
 result_dir = Path("results")
 result_dir.mkdir(exist_ok=True)
 
-test = test[2]
+test = tests[2]
 dataset = test["dataset_name"]
 assert dataset == "blonde"
 
@@ -67,6 +68,18 @@ try:
 
     with wandb.init(config=vars(args)) as run:
         train(args)
+
+except Exception as e:
+    print(f"Train error: {e}")
+    traceback.print_exc()
+
+del train
+import gc
+gc.collect()
+torch.cuda.empty_cache()
+from train_dreambooth_lora_sdxl import main as train
+
+try:
 
     # stage 2
     input_args = [

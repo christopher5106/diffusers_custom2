@@ -1076,9 +1076,9 @@ def main(args):
 
         if args.specialtokenembedding_path:
             from safetensors import safe_open
-            with safe_open(model, framework="pt", device="cpu") as f:
-                text_specialtoken_parameters_one.data = f.get_tensor("text_encoder.special_token_embedding")
-                text_specialtoken_parameters_two.data = f.get_tensor("text_encoder_2.special_token_embedding")
+            with safe_open(os.path.join(args.specialtokenembedding_path, "pytorch_lora_weights.safetensors"), framework="pt", device="cpu") as f:
+                text_specialtoken_parameters_one[0].data = f.get_tensor("text_encoder.special_token_embedding")
+                text_specialtoken_parameters_two[0].data = f.get_tensor("text_encoder_2.special_token_embedding")
 
         text_encoder_one.text_model.embeddings.train()
         text_encoder_two.text_model.embeddings.train()
