@@ -10,7 +10,7 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
         self.num_special_tokens = num_special_tokens
         embed_dim = self.subnet.token_embedding.embedding_dim  # 768, 1280 (for each encoder)
         weights = torch.zeros((1, num_special_tokens, embed_dim), dtype=torch.float32)
-        # nn.init.xavier_normal_(weights)
+        nn.init.xavier_normal_(weights)
         self.special_token_embedding = torch.nn.Parameter(weights)
 
     def forward(
@@ -29,7 +29,9 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
 
         embeddings = torch.cat([
             starttoken_embedding,
-            self.special_token_embedding,  # TODO repeat with correct batch size instead of 1
+            nn.Dropout(p=0.2)(
+                self.special_token_embedding
+            ),  # TODO repeat with correct batch size instead of 1
             nexttokens_embedding
         ], dim=1)
         return embeddings
@@ -51,6 +53,8 @@ def load_special_token(model, lora_path, num_special_tokens):
         text_specialtoken_parameters_two[0].copy_(state_dict["text_encoder_2.special_token_embedding"])
     del state_dict["text_encoder.special_token_embedding"]
     del state_dict["text_encoder_2.special_token_embedding"]
+    model.text_encoder.text_model.embeddings.eval()
+    model.text_encoder_2.text_model.embeddings.eval()
     return state_dict
 
 

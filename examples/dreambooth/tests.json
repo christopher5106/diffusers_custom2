@@ -1,5 +1,22 @@
 [
   {
+    "dataset_name": "golem",
+    "dataset_path": "/home/ubuntu/datasets/golem",
+    "concept_prompt": "daiton",
+    "validation_prompts": [
+      "wood golem",
+      "gold golem"
+    ]
+  },
+  {
+    "dataset_name": "vendalixia",
+    "dataset_path": "/home/ubuntu/datasets/vendalixia",
+    "concept_prompt": "daiton",
+    "validation_prompts": [
+      "a girl"
+    ]
+  },
+  {
     "dataset_name": "blonde",
     "dataset_path": "/home/ubuntu/datasets/blonde",
     "concept_prompt": "daiton",

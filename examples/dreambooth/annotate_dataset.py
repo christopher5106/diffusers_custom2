@@ -17,11 +17,11 @@ model, vis_processors, _ = load_model_and_preprocess(
 
 datasets = Path("/home/ubuntu/datasets/")
 
-for f in [datasets / "golem"]:  # datasets.iterdir():
+for f in [datasets / "golem", datasets / "vendalixia"]:  # datasets.iterdir():
     if f.is_dir():
         for image_path in f.iterdir():
             print(image_path)
-            if str(image_path)[-4:] == ".png":
+            if str(image_path)[-4:] in [".png", ".jpg", ".jpeg"]:
                 raw_image = Image.open(image_path).convert('RGB')
                 image = vis_processors["eval"](raw_image).unsqueeze(0).to(device)
 
