@@ -32,7 +32,8 @@ class CLIPTextEmbeddingsSpecialToken(nn.Module):
             self.special_token_embedding,  # TODO repeat with correct batch size instead of 1
             nexttokens_embedding
         ], dim=1)
-        return embeddings
+
+        return nn.Dropout(p=0.5)(embeddings)
 
 
 def add_special_token(text_encoder, num_special_tokens=1):
@@ -51,6 +52,8 @@ def load_special_token(model, lora_path, num_special_tokens):
         text_specialtoken_parameters_two[0].copy_(state_dict["text_encoder_2.special_token_embedding"])
     del state_dict["text_encoder.special_token_embedding"]
     del state_dict["text_encoder_2.special_token_embedding"]
+    model.text_encoder.text_model.embeddings.eval()
+    model.text_encoder_2.text_model.embeddings.eval()
     return state_dict
 
 
