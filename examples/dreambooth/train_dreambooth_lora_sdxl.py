@@ -678,7 +678,7 @@ class DreamBoothDataset(Dataset):
         instance_images = []
         self.custom_instance_prompts = []
         for path in Path(instance_data_root).iterdir():
-            if str(path)[-4:] in [".png", ".jpg", ".jpeg"]:
+            if str(path)[-4:] in [".png", ".jpg", "jpeg"]:
                 instance_images.append(Image.open(path))
 
                 self.custom_instance_prompts.extend(
