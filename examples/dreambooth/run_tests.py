@@ -12,7 +12,7 @@ with open("tests.json", "r") as f:
     tests = json.load(f)
 
 rank = 64
-num_steps = 5000
+num_steps = 1500
 num_special_tokens = 1
 
 result_dir = Path("results")
@@ -52,8 +52,8 @@ for test in tests:
         "--gradient_accumulation_steps", "1",
         "--learning_rate", "1e-4",
         "--num_special_tokens", str(num_special_tokens),
-        "--text_specialtoken_lr", "1e-4",
-        "--text_encoder_lr", "0.1",
+        "--text_specialtoken_lr", "1e-3",
+        "--text_encoder_lr", "1e-6",
         "--lr_warmup_steps", "0",
         "--max_train_steps", f"{num_steps}",
         "--seed", "3407",
@@ -72,7 +72,7 @@ for test in tests:
         print(f"Train error: {e}")
         traceback.print_exc()
 
-    for checkpoint in ["checkpoint-1500", "checkpoint-3000", ""]:  # "checkpoint-500",
+    for checkpoint in ["checkpoint-500", "checkpoint-1000", ""]:  # "checkpoint-500",
         lora_path = f"MODELS_{rank}/{dataset}/{replacement}/{checkpoint}/pytorch_lora_weights.safetensors"
         _validation_prompts = [
             (concept_prompt + " " + p).lower().replace(to_replace, replacement)
