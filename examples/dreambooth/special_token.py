@@ -46,11 +46,10 @@ def add_special_token(text_encoder, num_special_tokens=1):
 def load_special_token(model, lora_path, num_special_tokens):
     state_dict, network_alphas = model.lora_state_dict(lora_path)
     assert network_alphas is None
-    with torch.no_grad():
-        text_specialtoken_parameters_one = add_special_token(model.text_encoder, num_special_tokens)
-        text_specialtoken_parameters_two = add_special_token(model.text_encoder_2, num_special_tokens)
-        text_specialtoken_parameters_one[0].copy_(state_dict["text_encoder.special_token_embedding"])
-        text_specialtoken_parameters_two[0].copy_(state_dict["text_encoder_2.special_token_embedding"])
+    text_specialtoken_parameters_one = add_special_token(model.text_encoder, num_special_tokens)
+    text_specialtoken_parameters_two = add_special_token(model.text_encoder_2, num_special_tokens)
+    text_specialtoken_parameters_one[0].data = state_dict["text_encoder.special_token_embedding"]
+    text_specialtoken_parameters_two[0].data = state_dict["text_encoder_2.special_token_embedding"]
     del state_dict["text_encoder.special_token_embedding"]
     del state_dict["text_encoder_2.special_token_embedding"]
     model.text_encoder.text_model.embeddings.eval()

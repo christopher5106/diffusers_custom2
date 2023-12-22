@@ -1065,6 +1065,8 @@ def main(args):
     if args.num_special_tokens > 0:
         text_specialtoken_parameters_one = add_special_token(text_encoder_one, args.num_special_tokens)
         text_specialtoken_parameters_two = add_special_token(text_encoder_two, args.num_special_tokens)
+        text_encoder_one.text_model.embeddings.eval()
+        text_encoder_two.text_model.embeddings.eval()
 
     # create custom saving & loading hooks so that `accelerator.save_state(...)` serializes in a nice format
     def save_model_hook(models, weights, output_dir):

@@ -20,8 +20,8 @@ datasets = Path("/home/ubuntu/datasets/")
 for f in [datasets / "golem", datasets / "vendalixia"]:  # datasets.iterdir():
     if f.is_dir():
         for image_path in f.iterdir():
-            print(image_path)
             if str(image_path)[-4:] in [".png", ".jpg", "jpeg"]:
+                print(image_path)
                 raw_image = Image.open(image_path).convert('RGB')
                 # image = vis_processors["eval"](raw_image).unsqueeze(0).to(device)
 
