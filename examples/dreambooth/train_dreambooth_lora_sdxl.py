@@ -197,6 +197,13 @@ def parse_args(input_args=None):
         required=True,
         help="Path to pretrained model or model identifier from huggingface.co/models.",
     )
+
+    parser.add_argument(
+        "--specialtokenembedding_path",
+        type=str,
+        default=None,
+        help="Path to special token embedding.",
+    )
     parser.add_argument(
         "--pretrained_vae_model_name_or_path",
         type=str,
@@ -1063,10 +1070,18 @@ def main(args):
         )
 
     if args.num_special_tokens > 0:
+
         text_specialtoken_parameters_one = add_special_token(text_encoder_one, args.num_special_tokens)
         text_specialtoken_parameters_two = add_special_token(text_encoder_two, args.num_special_tokens)
-        text_encoder_one.text_model.embeddings.eval()
-        text_encoder_two.text_model.embeddings.eval()
+
+        if args.specialtokenembedding_path:
+            from safetensors import safe_open
+            with safe_open(model, framework="pt", device="cpu") as f:
+                text_specialtoken_parameters_one.data = f.get_tensor("text_encoder.special_token_embedding")
+                text_specialtoken_parameters_two.data = f.get_tensor("text_encoder_2.special_token_embedding")
+
+        text_encoder_one.text_model.embeddings.train()
+        text_encoder_two.text_model.embeddings.train()
 
     # create custom saving & loading hooks so that `accelerator.save_state(...)` serializes in a nice format
     def save_model_hook(models, weights, output_dir):
